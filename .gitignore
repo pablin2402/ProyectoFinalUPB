@@ -1,0 +1,24 @@
+# secretos
+.env
+*.pem
+
+# node
+node_modules/
+npm-debug.log
+
+# python
+__pycache__/
+*.pyc
+venv/
+
+# builds
+build/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# editor
+.vscode/
+.idea/

@@ -1,0 +1,32 @@
+services:
+  backend:
+    build: ./AdvancedSales_be
+    restart: unless-stopped
+    env_file: .env
+    expose:
+      - "5000"
+
+  ml:
+    build: ./sales-prediction-service
+    restart: unless-stopped
+    env_file: .env
+    expose:
+      - "8000"
+
+  frontend:
+    build:
+      context: ./PF-FRONTEND/my-project
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL}
+        REACT_APP_GOOGLE_API_KEY: ${REACT_APP_GOOGLE_API_KEY}
+        REACT_APP_CONTRACT_ADDRESS: ${REACT_APP_CONTRACT_ADDRESS}
+        REACT_APP_DESTINATION_WALLET_ADDRESS: ${REACT_APP_DESTINATION_WALLET_ADDRESS}
+        REACT_APP_USDT_CONTRACT_ADDRESS: ${REACT_APP_USDT_CONTRACT_ADDRESS}
+        REACT_APP_CONTRACT_CHAIN_ID: ${REACT_APP_CONTRACT_CHAIN_ID}
+        REACT_APP_GOOGLE_MAPS_ID: ${REACT_APP_GOOGLE_MAPS_ID}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - ml
