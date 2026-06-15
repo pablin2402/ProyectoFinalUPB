@@ -43,7 +43,7 @@ export const MapSidebar = ({
     <div className={`${collapsed ? "w-0 lg:w-16" : "w-full lg:w-[440px]"} h-full bg-white border-r border-gray-200 flex flex-col transition-all duration-300 overflow-hidden`}>
       {!collapsed && (
         <>
-          <div className="p-5 border-b border-gray-200 bg-gradient-to-br from-[#D3423E] to-red-700 rounded-br-3xl text-white flex-shrink-0">
+          <div className="p-5 border-b border-gray-200 bg-[#D32F2F] rounded-br-3xl text-white flex-shrink-0">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h1 className="text-xl font-black flex items-center gap-2">
