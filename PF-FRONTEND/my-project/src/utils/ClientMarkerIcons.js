@@ -6,7 +6,6 @@ import restauranteImg from "../icons/tenedor.png";
 export const CHANNEL_CONFIG = {
     Mayorista: {
         label: "Mayorista",
-        emoji: "🏭",
         image: mayoristaImg,
         color: "#7C3AED",
         colorDark: "#5B21B6",
@@ -16,7 +15,6 @@ export const CHANNEL_CONFIG = {
     },
     Tienda: {
         label: "Tienda",
-        emoji: "🏪",
         image: tiendaImg,
         color: "#0EA5E9",
         colorDark: "#0369A1",
@@ -26,7 +24,6 @@ export const CHANNEL_CONFIG = {
     },
     Bar: {
         label: "Bar",
-        emoji: "🍺",
         image: barImg,
         color: "#D97706",
         colorDark: "#92400E",
@@ -36,7 +33,6 @@ export const CHANNEL_CONFIG = {
     },
     Restaurante: {
         label: "Restaurante",
-        emoji: "🍽️",
         image: restauranteImg,
         color: "#DC2626",
         colorDark: "#991B1B",

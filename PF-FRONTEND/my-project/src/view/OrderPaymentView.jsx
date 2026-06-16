@@ -16,7 +16,7 @@ import OrderCalendarView from "./OrderCalendarView";
 
 
 const BRAND = "#D3423E";
-
+console.log(CONTRACT_ADDRESS)
 const POLYGON_CONFIG = {
   network: "Polygon Mainnet",
   contractShort: `${CONTRACT_ADDRESS.slice(0, 6)}…${CONTRACT_ADDRESS.slice(-4)}`,
