@@ -78,9 +78,11 @@ const getSalesManByIdRoute = async (req, res) => {
       id_owner: String(req.body.id_owner),
       salesMan: new mongoose.Types.ObjectId(req.body.salesMan),
     };
-    if (req.body.status && req.body.status !== "todos") {
-      query.status = req.body.status;
-    }
+  if (req.body.status && req.body.status !== "todos") {
+  query.status = Array.isArray(req.body.status)
+    ? { $in: req.body.status }
+    : req.body.status;
+}
   
     const salesManData = await SalesManRoute.find(query).populate("salesMan");
   
