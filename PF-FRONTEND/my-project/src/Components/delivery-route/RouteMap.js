@@ -148,12 +148,13 @@ export const RouteMap = ({
 
       {selectedMarkers.map((c, i) => {
         if (!c.client_location?.latitud || !c.client_location?.longitud) return null;
+        const ch = c.id_client?.userCategory || c.userCategory;
         return (
           <Marker
             key={`s-${c._id}`}
             position={{ lat: Number(c.client_location.latitud), lng: Number(c.client_location.longitud) }}
             icon={window.google ? {
-              url: buildOrderedChannelMarker(i, c.userCategory, routeColor),
+              url: buildOrderedChannelMarker(i, ch, routeColor),
               scaledSize: new window.google.maps.Size(52, 52),
               anchor: new window.google.maps.Point(26, 26),
             } : null}
