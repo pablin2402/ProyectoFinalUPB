@@ -123,26 +123,22 @@ const getSalesManByIdRouteDelivery = async (req, res) => {
       return res.status(400).json({ message: "Falta id_owner o delivery" });
     }
 
-    const now = new Date(); 
+    const [y, m, d] = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/La_Paz",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date()).split("-");
 
-    const startOfDay = new Date(Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate(),
-      0, 0, 0, 0
-    ));
-    const endOfDay = new Date(Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate(),
-      23, 59, 59, 999
-    ));
+    const startOfDay = new Date(`${y}-${m}-${d}T00:00:00.000Z`);
+    const endOfDay = new Date(`${y}-${m}-${d}T23:59:59.999Z`);
+
     const query = {
       id_owner: String(id_owner),
       delivery: new mongoose.Types.ObjectId(delivery),
       startDate: { $gte: startOfDay, $lte: endOfDay },
     };
-    
+
     const salesManData = await SalesManRoute.find(query).populate("delivery");
 
     res.json(salesManData || []);
@@ -151,7 +147,6 @@ const getSalesManByIdRouteDelivery = async (req, res) => {
     res.status(500).json({ message: "Error en la búsqueda", error });
   }
 };
-
 
 const getRouteSalesById = async (req, res) => {
 
