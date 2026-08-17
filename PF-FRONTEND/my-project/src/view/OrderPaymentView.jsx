@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { FaFileExport } from "react-icons/fa";
 import { FiExternalLink, FiGrid, FiList, FiCopy, FiCheck, FiInbox, FiShield } from "react-icons/fi";
@@ -16,7 +16,6 @@ import OrderCalendarView from "./OrderCalendarView";
 
 
 const BRAND = "#D3423E";
-console.log(CONTRACT_ADDRESS)
 const POLYGON_CONFIG = {
   network: "Polygon Mainnet",
   contractShort: `${CONTRACT_ADDRESS.slice(0, 6)}…${CONTRACT_ADDRESS.slice(-4)}`,
@@ -185,6 +184,9 @@ const OrderPaymentView = () => {
   const hasFilters = Boolean(payments.searchTerm || payments.startDate || payments.endDate);
   const isEmpty = !payments.tableLoading && payments.salesData.length === 0;
 
+  const lastItemRef = useRef(null);
+  if (selectedItem) lastItemRef.current = selectedItem;
+
   const handleOpenModal = useCallback((item) => {
     setSelectedItem(item);
     setShowModal(true);
@@ -192,9 +194,8 @@ const OrderPaymentView = () => {
 
   const handleCloseModal = useCallback(() => {
     setShowModal(false);
-    setSelectedItem(null);
+    setTimeout(() => setSelectedItem(null), 300);
   }, []);
-
   const handleClearFilters = useCallback(() => {
     payments.setSearchTerm?.("");
     payments.setStartDate?.(null);
@@ -335,7 +336,7 @@ const OrderPaymentView = () => {
 
       <PaymentDetailModal
         open={showModal}
-        item={selectedItem}
+        item={selectedItem ?? lastItemRef.current}
         onClose={handleCloseModal}
         onUpdateStatus={payments.updateStatus}
         verifyOnChain={payments.verifyOnChain}
