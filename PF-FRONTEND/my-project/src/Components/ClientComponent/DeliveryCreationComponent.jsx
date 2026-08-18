@@ -250,7 +250,7 @@ const DeliveryCreationComponent = () => {
             ]);
 
             const deliveryId = deliveryRes.data._id;
-
+            console.log(formData, deliveryId)
             const userRes = await Promise.race([
                 axios.post(
                     API_URL + "/whatsapp/user",
@@ -269,8 +269,7 @@ const DeliveryCreationComponent = () => {
                     setTimeout(() => reject(new Error("Timeout en usuario")), 10000)
                 ),
             ]);
-            console.log(userRes)
-            if (userRes.status === 200) {
+            if (userRes.status === 200 || userRes.status === 201) {
                 setSuccessModal(true);
                 setTimeout(() => {
                     resetForm();
