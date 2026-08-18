@@ -14,7 +14,7 @@ const ObjectiveDepartmentComponent = ({ item, setViewMode, setSelectedRegion, se
   const [selectedFilter, setSelectedFilter] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({ numberOfBoxes: 0, saleLastYear1: 0, startDate, endDate, categoria: "", ciudad: "" });
-  const [salesData, setSalesData] = useState("");
+  const [salesData, setSalesData] = useState([]);
   const [selectedPayment, setSelectedPayment] = useState("");
   const [paymentFilterActive, setPaymentActive] = useState(false);
   const [showObjectiveErrorModal, setShowObjectiveErrorModal] = useState(false);
@@ -80,12 +80,13 @@ const ObjectiveDepartmentComponent = ({ item, setViewMode, setSelectedRegion, se
         { userId: user, page: 1, id_owner: user, limit: 1000 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setSalesData(response.data.data);
+      console.log("categorias", response.data);
+      setSalesData(Array.isArray(response.data?.data) ? response.data.data : []);
     } catch (error) {
       console.error(error);
+      setSalesData([]);
     }
   };
-
   const applyFilters = () => {
     const customFilters = {};
     if (selectedPayment) customFilters.payStatus = selectedPayment;
@@ -389,7 +390,7 @@ const ObjectiveDepartmentComponent = ({ item, setViewMode, setSelectedRegion, se
               </div>
               <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <label className="text-xs font-semibold text-gray-600 uppercase">Categoría</label>
-                                <select
+                <select
                   name="categoria"
                   value={formData.categoria}
                   onChange={handleChange}
