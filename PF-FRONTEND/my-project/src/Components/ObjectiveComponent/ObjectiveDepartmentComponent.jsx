@@ -389,11 +389,11 @@ const ObjectiveDepartmentComponent = ({ item, setViewMode, setSelectedRegion, se
               </div>
               <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <label className="text-xs font-semibold text-gray-600 uppercase">Categoría</label>
-                <select
+                                <select
                   name="categoria"
                   value={formData.categoria}
                   onChange={handleChange}
-                  className="app-select"
+                  className="app-select text-gray-900 bg-white"
                 >
                   <option value="">Selecciona una categoría</option>
                   {Array.isArray(salesData) && salesData.map((cat) => (
