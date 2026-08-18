@@ -31,6 +31,13 @@ const ROUTE_COLOR = "#D3423E";
 const ROUTE_HALO_COLOR = "#FCA5A5";
 const ROUTE_COLOR_DARK = "#991B1B";
 
+const PIN_PATH = "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z";
+
+const PinIcon = ({ color = "#fff", size = 10 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+        <path d={PIN_PATH} />
+    </svg>
+);
 
 const buildOrderedChannelMarker = (orderIndex, channel, isSelected = true, pulsing = false) => {
     const config = getChannelConfig(channel);
@@ -39,7 +46,6 @@ const buildOrderedChannelMarker = (orderIndex, channel, isSelected = true, pulsi
     const colorDark = config.colorDark;
     const ringOpacity = pulsing ? 0.4 : 0;
     const imageSrc = config.imageBase64 || null;
-    const fallbackLabel = (config.emoji || String(channel || "?").charAt(0).toUpperCase());
 
     const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
@@ -58,8 +64,7 @@ const buildOrderedChannelMarker = (orderIndex, channel, isSelected = true, pulsi
       <circle cx="${size / 2}" cy="${size / 2}" r="22" fill="white" stroke="${color}" stroke-width="3" filter="url(#ds-${orderIndex})"/>
       ${imageSrc
         ? `<image href="${imageSrc}" x="${size / 2 - 14}" y="${size / 2 - 14}" width="28" height="28" clip-path="url(#ic-${orderIndex})" preserveAspectRatio="xMidYMid meet"/>`
-        : `<text x="${size / 2}" y="${size / 2 + 6}" text-anchor="middle" font-size="16" font-weight="bold" font-family="Arial, sans-serif" fill="${colorDark}">${fallbackLabel}</text>`
-    }
+: `<g transform="translate(${size / 2 - 11}, ${size / 2 - 11})"><path d="${PIN_PATH}" fill="${colorDark}" transform="scale(0.92)"/></g>`    }
       <circle cx="${size - 11}" cy="11" r="10" fill="${colorDark}" stroke="white" stroke-width="2"/>
       <text x="${size - 11}" y="15" text-anchor="middle" fill="white" font-size="11" font-weight="900" font-family="Arial, sans-serif">${orderIndex + 1}</text>
     </svg>
@@ -677,7 +682,7 @@ export default function CreateRouteComponent() {
                                                                 className="absolute -top-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-[10px] shadow-sm"
                                                                 style={{ backgroundColor: channelConf.color }}
                                                             >
-                                                                {channelConf.emoji}
+                                                                <PinIcon />
                                                             </div>
                                                         </div>
 
@@ -1083,7 +1088,7 @@ export default function CreateRouteComponent() {
                                         className="w-6 h-6 rounded-full border-2 border-white shadow flex items-center justify-center text-white text-xs flex-shrink-0"
                                         style={{ backgroundColor: conf.color }}
                                     >
-                                        {conf.emoji}
+                                        <PinIcon />
                                     </div>
                                     <span className="text-gray-700 font-medium flex-1 text-left">{channel}</span>
                                     {count > 0 && (
@@ -1133,7 +1138,7 @@ export default function CreateRouteComponent() {
                                                     className="absolute -top-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-[9px] shadow-sm"
                                                     style={{ backgroundColor: channelConf.color }}
                                                 >
-                                                    {channelConf.emoji}
+                                                   <PinIcon />
                                                 </div>
                                             </div>
                                             <p className="text-[11px] font-bold text-gray-900 truncate mt-1 w-full text-center">

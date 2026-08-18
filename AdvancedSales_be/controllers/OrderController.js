@@ -657,7 +657,6 @@ const getOrderSalesAppById = async (req, res) => {
     if (salesId) matchStage.salesId = mongoose.Types.ObjectId(salesId);
     if (paymentType) matchStage.accountStatus = paymentType;
     const pipeline = [];
-    console.log(req.body);
     if (startDate && endDate) {
       pipeline.push(
         {
@@ -867,7 +866,6 @@ const getOrderSalesAppById = async (req, res) => {
 const getOrderByIdAndOrderStatus = async (req, res) => {
   try {
     const { id_owner, page, limit, status, paymentType, payStatus, salesId, fullName, startDate, endDate, region } = req.body;
-    console.log(req.body)
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
     let matchStage = { id_owner };
@@ -1848,7 +1846,6 @@ const updateOrderTracking = async (req, res) => {
 };
 const uploadOrderStatus = async (req, res) => {
   try {
-    console.log(req.body)
     const { _id, id_owner, orderStatus } = req.body;
     if (!_id || !id_owner || !orderStatus) {
       return res.status(400).send({ message: "Faltan datos: _id, id_owner y orderStatus son requeridos." });
