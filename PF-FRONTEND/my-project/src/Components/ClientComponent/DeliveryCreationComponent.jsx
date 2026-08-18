@@ -269,7 +269,7 @@ const DeliveryCreationComponent = () => {
                     setTimeout(() => reject(new Error("Timeout en usuario")), 10000)
                 ),
             ]);
-
+            console.log(userRes)
             if (userRes.status === 200) {
                 setSuccessModal(true);
                 setTimeout(() => {
@@ -279,6 +279,8 @@ const DeliveryCreationComponent = () => {
             }
         } catch (error) {
             console.error("Error en el proceso", error);
+                console.error("Error en el proceso", error.response?.data || error.message);
+
             setErrorMsg(
                 error.message?.includes("Timeout")
                     ? "La petición tardó demasiado. Verifica tu conexión."
@@ -287,6 +289,8 @@ const DeliveryCreationComponent = () => {
             setErrorModal(true);
         } finally {
             setSubmitting(false);
+                                navigate("/delivery/list");
+
         }
     };
 

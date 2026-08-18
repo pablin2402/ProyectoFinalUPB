@@ -180,7 +180,7 @@ router
 .post("/price",authenticateToken, priceController.postPrice)
 .put("/price",authenticateToken, priceController.uploadPriceProduct)
 
-.post("/user",authenticateToken,  userController.postNewAccountUser)
+.post("/user", userController.postNewAccountUser)
 .put("/password",authenticateToken,  userController.resetPassword)
 .put("/user/id",authenticateToken, userController.updateUserFile)
 .delete("/user/id",authenticateToken, userController.deleteClient)

@@ -264,7 +264,10 @@ const isFormValid = useMemo(
             );
             setErrorModal(true);
         } finally {
+
             setSubmitting(false);
+                                navigate("/delivery/list");
+
         }
     };
 
