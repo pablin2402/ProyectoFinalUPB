@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { GoogleMap, Marker, Polyline, OverlayView, Polygon } from "@react-google-maps/api";
-import { buildMarkerIcon } from "../../utils/ClientMarkerIcons";
+import { buildMarkerIconSync } from "../../utils/ClientMarkerIcons";
 import { MUNICIPIOS_COCHABAMBA } from "../../utils/CochabambaMunicipios";
 import { MAP_STYLE_MODERN, CONTAINER_STYLE, DEPOT } from "../../utils/MapDetails";
 import { getTripColor } from "../../utils/RouteOptimizer";
@@ -116,13 +116,13 @@ export const RouteMap = ({
         );
       })}
 
-      <Marker
+            <Marker
         position={DEPOT}
         icon={window.google ? {
           url: buildDepotIcon(),
           scaledSize: new window.google.maps.Size(56, 56),
           anchor: new window.google.maps.Point(28, 28),
-        } : null}
+        } : undefined}
         title="Depósito"
         zIndex={2000}
       />
@@ -132,8 +132,8 @@ export const RouteMap = ({
         if (!cl?.latitud || !cl?.longitud) return null;
         if (selectedMarkers.some((m) => m._id === loc._id)) return null;
         const ch = loc.id_client?.userCategory || loc.userCategory;
-        const icon = window.google && iconsReady ? buildMarkerIcon(ch, window.google.maps, false) : null;
-        return (
+        const icon = window.google && iconsReady ? buildMarkerIconSync(ch, window.google.maps, false) : undefined;       
+         return (
           <Marker
             key={`a-${loc._id || i}`}
             position={{ lat: Number(cl.latitud), lng: Number(cl.longitud) }}
@@ -157,7 +157,7 @@ export const RouteMap = ({
               url: buildOrderedChannelMarker(i, ch, routeColor),
               scaledSize: new window.google.maps.Size(52, 52),
               anchor: new window.google.maps.Point(26, 26),
-            } : null}
+                        } : undefined}
             title={`Parada ${i + 1} — clic para quitar de la ruta`}
             onClick={() => handleDelete(c._id)}
             zIndex={1000 + i}

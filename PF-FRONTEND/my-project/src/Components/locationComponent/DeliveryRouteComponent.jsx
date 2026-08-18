@@ -744,11 +744,11 @@ export default function DeliveryRouteComponent() {
             mapContainerStyle={CONTAINER_STYLE}
             center={center}
             zoom={mapZoom}
-onLoad={(map) => {
+            onLoad={(map) => {
               mapRef.current = map;
               map.panTo(DEPOT);
               map.setZoom(14);
-            }}            options={{
+            }} options={{
               disableDefaultUI: false,
               zoomControl: true,
               streetViewControl: false,
@@ -758,16 +758,16 @@ onLoad={(map) => {
 
             }}
           >
-       <Marker
-  position={DEPOT}
-  icon={window.google ? {
-    url: depotLogo,
-    scaledSize: new window.google.maps.Size(50, 50),
-    anchor: new window.google.maps.Point(25, 25),
-  } : undefined}
-  title="Depósito"
-  zIndex={2000}
-/>
+            <Marker
+              position={DEPOT}
+              icon={window.google ? {
+                url: depotLogo,
+                scaledSize: new window.google.maps.Size(50, 50),
+                anchor: new window.google.maps.Point(25, 25),
+              } : undefined}
+              title="Depósito"
+              zIndex={2000}
+            />
 
             {activeRoute && activeRoute.route && activeRoute.route
               .filter(c => {
