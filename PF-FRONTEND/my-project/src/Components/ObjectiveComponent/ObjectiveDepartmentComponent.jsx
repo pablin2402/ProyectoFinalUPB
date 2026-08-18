@@ -61,7 +61,14 @@ const ObjectiveDepartmentComponent = ({ item, setViewMode, setSelectedRegion, se
   const fetchObjectiveDataRegion = async (customFilters) => {
     if (!item?.region) return;
     setLoading(true);
-    const filters = { region: item.region, salesId: "", id_owner: user, payStatus: "", startDate: date1, endDate: date2, ...customFilters };
+    const filters = { 
+      region: item.region, 
+      salesId: "", 
+      id_owner: user, 
+      payStatus: "", 
+      startDate: date1, 
+      endDate: date2, 
+      ...customFilters };
     try {
       const response = await axios.post(API_URL + "/whatsapp/order/objective/region/id", filters, {
         headers: { Authorization: `Bearer ${token}` },

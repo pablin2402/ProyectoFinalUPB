@@ -296,21 +296,23 @@ const ObjectiveRegionalsView = () => {
     }
   };
 
-  const deleteObjective1 = async (id2) => {
+const deleteObjective1 = async (id2) => {
     try {
-      const response = await axios.delete(
-        API_URL + "/whatsapp/order/objective/product",
-        { data: { _id: id2, id_owner: user } },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (response.status === 200) {
-        fetchProducts(1);
-        setShowEditModal(false);
-      }
+        const response = await axios.delete(
+            API_URL + "/whatsapp/order/objective/product",
+            {
+                data: { _id: id2, id_owner: user },
+                headers: { Authorization: `Bearer ${token}` },
+            }
+        );
+        if (response.status === 200 || response.status === 204) {
+            fetchProducts(1);
+            setShowEditModal(false);
+        }
     } catch (error) {
-      console.error("Error al actualizar el estado de pago:", error);
-    }
-  };
+        console.error("Error al eliminar el objetivo:", error);
+    } 
+};
 
   const totalObjetivo = salesData.reduce((s, i) => s + (i.objetivo || 0), 0);
   const totalVtaAA = salesData.reduce((s, i) => s + (i.saleLastYear || 0), 0);

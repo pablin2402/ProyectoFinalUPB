@@ -76,9 +76,8 @@ const SalesManView = () => {
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => sm.exportToExcel(handleError)} disabled={!sm.salesData.length}
-              className={`px-4 py-2.5 border rounded-xl flex items-center gap-2 font-semibold text-sm transition-all shadow-sm ${
-                sm.salesData.length ? "bg-white text-gray-700 border-gray-200 hover:border-[#D3423E] hover:text-[#D3423E]" : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-              }`}>
+              className={`px-4 py-2.5 border rounded-xl flex items-center gap-2 font-semibold text-sm transition-all shadow-sm ${sm.salesData.length ? "bg-white text-gray-700 border-gray-200 hover:border-[#D3423E] hover:text-[#D3423E]" : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                }`}>
               <FaFileExport size={14} />
               <span className="hidden sm:inline">Exportar</span>
             </button>
@@ -148,15 +147,15 @@ const SalesManView = () => {
           )}
         </div>
       </div>
-<SalesmanDrawer
-  isOpen={drawerOpen}
-  onClose={closeDrawer}
-  salesman={drawerSalesman}
-  avatarColor={getColor(
-    drawerSalesman?.salesId?.fullName,
-    drawerSalesman?.salesId?.lastName
-  )}
-/>
+      <SalesmanDrawer
+        isOpen={drawerOpen}
+        onClose={closeDrawer}
+        salesman={drawerSalesman}
+        avatarColor={getColor(
+          drawerSalesman?.salesId?.fullName,
+          drawerSalesman?.salesId?.lastName
+        )}
+      />
       <AnimatePresence>
         {sm.confirmToggle && (
           <ConfirmModal
@@ -176,7 +175,7 @@ const SalesManView = () => {
         onSuccess={() => setShowSuccess(true)}
         onError={handleError}
       />
-{showSuccess && (
+      {showSuccess && (
         <ResultModal open={showSuccess} type="success"
           title="¡Contraseña cambiada!" message="La contraseña se actualizó correctamente."
           onClose={() => setShowSuccess(false)} />
