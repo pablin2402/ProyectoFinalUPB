@@ -31,10 +31,11 @@ const ObjectiveDepartmentComponent = ({ item, setViewMode, setSelectedRegion, se
 
   const handleSubmit = async () => {
     try {
+      console.log(formData);
       const response = await axios.post(
         API_URL + "/whatsapp/sales/objective/id",
         {
-          region: formData.ciudad,
+          region: item.region,
           lyne: formData.categoria,
           numberOfBoxes: formData.numberOfBoxes,
           saleLastYear: formData.saleLastYear1,
