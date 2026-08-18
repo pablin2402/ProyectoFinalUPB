@@ -39,6 +39,7 @@ const buildOrderedChannelMarker = (orderIndex, channel, isSelected = true, pulsi
     const colorDark = config.colorDark;
     const ringOpacity = pulsing ? 0.4 : 0;
     const imageSrc = config.imageBase64 || null;
+    const fallbackLabel = (config.emoji || String(channel || "?").charAt(0).toUpperCase());
 
     const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
@@ -57,7 +58,7 @@ const buildOrderedChannelMarker = (orderIndex, channel, isSelected = true, pulsi
       <circle cx="${size / 2}" cy="${size / 2}" r="22" fill="white" stroke="${color}" stroke-width="3" filter="url(#ds-${orderIndex})"/>
       ${imageSrc
         ? `<image href="${imageSrc}" x="${size / 2 - 14}" y="${size / 2 - 14}" width="28" height="28" clip-path="url(#ic-${orderIndex})" preserveAspectRatio="xMidYMid meet"/>`
-        : `<text x="${size / 2}" y="${size / 2 + 6}" text-anchor="middle" font-size="16" font-weight="bold" fill="${colorDark}">${config.emoji}</text>`
+        : `<text x="${size / 2}" y="${size / 2 + 6}" text-anchor="middle" font-size="16" font-weight="bold" font-family="Arial, sans-serif" fill="${colorDark}">${fallbackLabel}</text>`
     }
       <circle cx="${size - 11}" cy="11" r="10" fill="${colorDark}" stroke="white" stroke-width="2"/>
       <text x="${size - 11}" y="15" text-anchor="middle" fill="white" font-size="11" font-weight="900" font-family="Arial, sans-serif">${orderIndex + 1}</text>
@@ -846,11 +847,11 @@ export default function CreateRouteComponent() {
                                         lat: Number(client.client_location.latitud),
                                         lng: Number(client.client_location.longitud),
                                     }}
-                                    icon={window.google ? {
-                                        url: buildOrderedChannelMarker(index, client.userCategory, true, isPulsing),
-                                        scaledSize: new window.google.maps.Size(52, 52),
-                                        anchor: new window.google.maps.Point(26, 26),
-                                    } : null}
+                                    icon={window.google && iconsReady ? {
+    url: buildOrderedChannelMarker(index, client.userCategory, true, isPulsing),
+    scaledSize: new window.google.maps.Size(52, 52),
+    anchor: new window.google.maps.Point(26, 26),
+} : null}
                                     animation={isPulsing ? window.google.maps.Animation.DROP : null}
                                     onClick={() => handleMarkerClick(client)}
                                     zIndex={1000 + index}
