@@ -1,5 +1,4 @@
-import { getChannelConfig } from "../utils/ClientMarkerIcons";
-
+import { getChannelConfig, getCachedIcon } from "../utils/ClientMarkerIcons";
 export const ACCOUNT_STATUS_CONFIG = {
   "Crédito": { color: "bg-yellow-100 text-yellow-800 border-yellow-300", label: "CRÉDITO" },
   "Contado": { color: "bg-green-100 text-green-800 border-green-300", label: "CONTADO" },
@@ -25,8 +24,8 @@ export const buildOrderedChannelMarker = (orderIndex, channel, tripColor = "#D34
   const colorDark = config.colorDark || tripColor;
   const size = 52;
   const ringOpacity = pulsing ? 0.4 : 0;
-  const imageSrc = config.imageBase64 || null;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><defs><filter id="ds-${orderIndex}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="2"/><feOffset dx="0" dy="2" result="offsetblur"/><feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><clipPath id="ic-${orderIndex}"><circle cx="${size / 2}" cy="${size / 2}" r="20"/></clipPath></defs><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 1}" fill="${tripColor}" opacity="${ringOpacity}"/><circle cx="${size / 2}" cy="${size / 2}" r="22" fill="white" stroke="${tripColor}" stroke-width="3" filter="url(#ds-${orderIndex})"/>${imageSrc ? `<image href="${imageSrc}" x="${size / 2 - 14}" y="${size / 2 - 14}" width="28" height="28" clip-path="url(#ic-${orderIndex})" preserveAspectRatio="xMidYMid meet"/>` : `<text x="${size / 2}" y="${size / 2 + 6}" text-anchor="middle" font-size="16" font-weight="bold" fill="${colorDark}">${emoji}</text>`}<circle cx="${size - 11}" cy="11" r="10" fill="${tripColor}" stroke="white" stroke-width="2"/><text x="${size - 11}" y="15" text-anchor="middle" fill="white" font-size="11" font-weight="900" font-family="Arial, sans-serif">${orderIndex + 1}</text></svg>`;
+  const imageSrc = getCachedIcon(channel);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><defs><filter id="ds-${orderIndex}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="2"/><feOffset dx="0" dy="2" result="offsetblur"/><feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter><clipPath id="ic-${orderIndex}"><circle cx="${size / 2}" cy="${size / 2}" r="20"/></clipPath></defs><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 1}" fill="${tripColor}" opacity="${ringOpacity}"/><circle cx="${size / 2}" cy="${size / 2}" r="22" fill="white" stroke="${tripColor}" stroke-width="3" filter="url(#ds-${orderIndex})"/>${imageSrc ? `<image href="${imageSrc}" x="${size / 2 - 14}" y="${size / 2 - 14}" width="28" height="28" clip-path="url(#ic-${orderIndex})" preserveAspectRatio="xMidYMid meet"/>` : `<text x="${size / 2}" y="${size / 2 + 6}" text-anchor="middle" font-size="16" font-weight="bold" fill="${colorDark}">${emoji}</text>`}<circle cx="${size - 11}" cy="11" r="10" fill="${tripColor}" stroke="white" stroke-width="2"/><text x="${size - 11}" y="15" text-anchor="middle" fill="white" font-size="11" font-weight="900" font-family="Arial, sans-serif">${orderIndex + 1}</text></svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 };
 
