@@ -182,7 +182,7 @@ const DeliveryCreationComponent = () => {
 
     const isFormValid = useMemo(
         () => validateStep1() && validateStep3(),
-         // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [formData, address]
     );
 
@@ -250,7 +250,6 @@ const DeliveryCreationComponent = () => {
             ]);
 
             const deliveryId = deliveryRes.data._id;
-            console.log(formData, deliveryId)
             const userRes = await Promise.race([
                 axios.post(
                     API_URL + "/whatsapp/user",
@@ -278,7 +277,7 @@ const DeliveryCreationComponent = () => {
             }
         } catch (error) {
             console.error("Error en el proceso", error);
-                console.error("Error en el proceso", error.response?.data || error.message);
+            console.error("Error en el proceso", error.response?.data || error.message);
 
             setErrorMsg(
                 error.message?.includes("Timeout")
@@ -288,7 +287,7 @@ const DeliveryCreationComponent = () => {
             setErrorModal(true);
         } finally {
             setSubmitting(false);
-                                navigate("/delivery/list");
+            navigate("/delivery/list");
 
         }
     };
@@ -328,23 +327,21 @@ const DeliveryCreationComponent = () => {
                                                 scale: isActive ? 1.1 : 1,
                                             }}
                                             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                            className={`rounded-full flex items-center justify-center font-bold transition-all ${
-                                                isActive
+                                            className={`rounded-full flex items-center justify-center font-bold transition-all ${isActive
                                                     ? "w-14 h-14 bg-[#D3423E] text-white text-xl shadow-lg shadow-red-200"
                                                     : isCompleted
                                                         ? "w-12 h-12 bg-red-100 text-[#D3423E] text-base"
                                                         : "w-12 h-12 bg-gray-100 text-gray-400 text-base"
-                                            }`}
+                                                }`}
                                         >
                                             {isCompleted ? <FaCheck size={16} /> : s.id}
                                         </motion.div>
-                                        <p className={`text-sm font-bold text-center ${
-                                            isActive
+                                        <p className={`text-sm font-bold text-center ${isActive
                                                 ? "text-gray-900"
                                                 : isCompleted
                                                     ? "text-gray-700"
                                                     : "text-gray-400"
-                                        }`}>
+                                            }`}>
                                             {s.label}
                                         </p>
                                     </div>
@@ -441,7 +438,7 @@ const DeliveryCreationComponent = () => {
                                             value={formData.region}
                                             onChange={handleChange}
                                             required
-                                              className="app-select"
+                                            className="app-select"
 
                                         >
                                             <option value="">Seleccione una ciudad</option>
@@ -477,11 +474,10 @@ const DeliveryCreationComponent = () => {
                                     onDragLeave={() => setDragOver(false)}
                                     onDrop={handleDrop}
                                     onClick={() => fileInputRef.current?.click()}
-                                    className={`border-2 border-dashed rounded-3xl p-12 text-center cursor-pointer transition-all ${
-                                        dragOver
+                                    className={`border-2 border-dashed rounded-3xl p-12 text-center cursor-pointer transition-all ${dragOver
                                             ? "border-[#D3423E] bg-red-50"
                                             : "border-gray-300 hover:border-[#D3423E] hover:bg-red-50/30"
-                                    }`}
+                                        }`}
                                 >
                                     <input
                                         ref={fileInputRef}
@@ -832,11 +828,10 @@ const FooterButtons = ({
         <button
             onClick={onNext}
             disabled={nextDisabled}
-            className={`flex items-center gap-2 px-7 py-3 rounded-full text-sm font-bold transition-all ${
-                nextDisabled
+            className={`flex items-center gap-2 px-7 py-3 rounded-full text-sm font-bold transition-all ${nextDisabled
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                     : "bg-[#D3423E] text-white hover:bg-red-700 shadow-md hover:shadow-lg"
-            }`}
+                }`}
         >
             {nextLoading ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

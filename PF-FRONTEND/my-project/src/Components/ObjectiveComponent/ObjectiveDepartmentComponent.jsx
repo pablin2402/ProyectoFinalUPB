@@ -80,7 +80,6 @@ const ObjectiveDepartmentComponent = ({ item, setViewMode, setSelectedRegion, se
         { userId: user, page: 1, id_owner: user, limit: 1000 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log("categorias", response.data);
       setSalesData(Array.isArray(response.data?.data) ? response.data.data : []);
     } catch (error) {
       console.error(error);

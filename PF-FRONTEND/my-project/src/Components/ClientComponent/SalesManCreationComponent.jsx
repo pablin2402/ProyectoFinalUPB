@@ -243,12 +243,12 @@ const SalesManCreationComponent = () => {
         salesMan: salesmanId
       }, { headers: { Authorization: `Bearer ${token}` } });
 
-      if (userResponse.status !== 200) throw new Error("Error creando usuario");
+      if (userResponse.status === 200 || userResponse.status === 201) {
 
-      setSuccessModal(true);
-      resetForm();
-      setTimeout(() => navigate("/sales/client"), 1500);
-
+        setSuccessModal(true);
+        resetForm();
+        setTimeout(() => navigate("/sales/client"), 1500);
+      }
     } catch (error) {
       console.error("Error al crear vendedor:", error);
       setErrorMessage(error.message || "No se pudo crear el vendedor. Intenta de nuevo.");
@@ -277,7 +277,7 @@ const SalesManCreationComponent = () => {
     <div className="bg-white min-h-screen p-4 sm:p-6">
       <div className="max-w-5xl mx-auto">
         <div className="mb-6">
-         
+
           <div className="flex items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
@@ -438,7 +438,7 @@ const SalesManCreationComponent = () => {
                         value={formData.role}
                         onChange={handleChange}
                         className="app-select"
-                          required
+                        required
                       >
                         <option value="">Seleccione una ciudad</option>
                         {CITIES.map(c => (
@@ -702,11 +702,10 @@ const StepIndicator = ({ number, label, active, completed, onClick, disabled }) 
     disabled={disabled}
     className={`flex flex-col items-center gap-1 transition-all ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
   >
-    <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
-      completed ? 'bg-green-500 text-white' :
-      active ? 'bg-[#D3423E] text-white ring-4 ring-red-100' :
-      'bg-gray-200 text-gray-500'
-    }`}>
+    <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all ${completed ? 'bg-green-500 text-white' :
+        active ? 'bg-[#D3423E] text-white ring-4 ring-red-100' :
+          'bg-gray-200 text-gray-500'
+      }`}>
       {completed ? <FaCheck size={12} /> : number}
     </div>
     <span className={`text-[10px] font-semibold ${active ? 'text-[#D3423E]' : completed ? 'text-green-600' : 'text-gray-500'}`}>
