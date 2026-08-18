@@ -12,7 +12,6 @@ function AppWrapper() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    console.log(token);
     if (token) {
       setAuthenticated(true);
     }

@@ -826,8 +826,8 @@ export default function CreateRouteComponent() {
                             const selected = isClientSelected(location._id);
                             if (selected) return null;
                             const icon = window.google && iconsReady
-                                ? buildMarkerIcon(location.userCategory, window.google.maps, false)
-                                : null;
+    ? buildMarkerIcon(location.userCategory, window.google.maps, false)
+    : undefined;
                             return (
                                 <Marker
                                     key={`avail-${location._id || index}`}
@@ -856,7 +856,7 @@ export default function CreateRouteComponent() {
     url: buildOrderedChannelMarker(index, client.userCategory, true, isPulsing),
     scaledSize: new window.google.maps.Size(52, 52),
     anchor: new window.google.maps.Point(26, 26),
-} : null}
+} : undefined}
                                     animation={isPulsing ? window.google.maps.Animation.DROP : null}
                                     onClick={() => handleMarkerClick(client)}
                                     zIndex={1000 + index}
