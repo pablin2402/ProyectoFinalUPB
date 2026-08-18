@@ -448,15 +448,21 @@ const getOrderById = async (req, res) => {
       },
     });
 
-    const [result] = await Order.aggregate(pipeline);
+    console.time("agg");
+    const [result] = await Order.aggregate(pipeline).allowDiskUse(true);
+    console.timeEnd("agg");
+
     const orders = result?.data || [];
     const totalOrders = result?.meta?.[0]?.total || 0;
+    console.log("totalOrders:", totalOrders, "· devueltos:", orders.length);
 
+    console.time("populate");
     await Order.populate(orders, [
       { path: "salesId" },
       { path: "orderTrackId" },
       { path: "id_client", populate: { path: "client_location" } },
     ]);
+    console.timeEnd("populate");
 
     res.json({
       orders,
@@ -1661,7 +1667,7 @@ const postOrder = (req, res) => {
       id_client: req.body.id_client || "",
       salesId: req.body.salesId || "",
       creationDate: req.body.creationDate,
-      orderStatus: "aproved",
+      orderStatus: "created",
       payStatus: "Pendiente",
       orderTrackId: req.body.orderTrackId,
       region: req.body.region
