@@ -758,16 +758,16 @@ onLoad={(map) => {
 
             }}
           >
-         <Marker
-              position={DEPOT}
-              icon={window.google ? {
-                url: depotLogo,
-                scaledSize: new window.google.maps.Size(50, 50),
-                anchor: new window.google.maps.Point(25, 25),
-              } : null}
-              title="Depósito"
-              zIndex={2000}
-            />
+       <Marker
+  position={DEPOT}
+  icon={window.google ? {
+    url: depotLogo,
+    scaledSize: new window.google.maps.Size(50, 50),
+    anchor: new window.google.maps.Point(25, 25),
+  } : undefined}
+  title="Depósito"
+  zIndex={2000}
+/>
 
             {activeRoute && activeRoute.route && activeRoute.route
               .filter(c => {
