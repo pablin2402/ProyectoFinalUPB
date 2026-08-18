@@ -204,5 +204,29 @@ export const preloadChannelIcons = async () => {
         .map(c => loadImageAsBase64(c.image));
     await Promise.all(promises);
 };
+export const getCachedIcon = (channel) => {
+    const config = getChannelConfig(channel);
+    if (!config.image) return null;
+    return iconCache.get(config.image) || null;
+};
 
+export const buildMarkerIconSync = (channel, google, isSelected = false) => {
+    if (!google?.maps) return undefined;
+    const config = getChannelConfig(channel);
+    const size = isSelected ? 56 : 44;
+    const imageSrc = getCachedIcon(channel);
+    const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <defs><clipPath id="c-${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 8}"/></clipPath></defs>
+      <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 4}" fill="white" stroke="${config.color}" stroke-width="3"/>
+      ${imageSrc
+        ? `<image href="${imageSrc}" x="${size / 2 - 11}" y="${size / 2 - 11}" width="22" height="22" clip-path="url(#c-${size})" preserveAspectRatio="xMidYMid meet"/>`
+        : `<circle cx="${size / 2}" cy="${size / 2}" r="6" fill="${config.color}"/>`}
+    </svg>`;
+    return {
+        url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+        scaledSize: new google.maps.Size(size, size),
+        anchor: new google.maps.Point(size / 2, size / 2),
+    };
+};  
 export const CHANNEL_LIST = ["Mayorista", "Tienda", "Bar", "Restaurante"];

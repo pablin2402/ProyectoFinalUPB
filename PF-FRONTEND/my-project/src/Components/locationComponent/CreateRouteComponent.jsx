@@ -15,8 +15,8 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import AlertModal from "../modal/AlertModal";
 import {
-    CHANNEL_CONFIG, getChannelConfig, buildMarkerIcon, CHANNEL_LIST,
-    preloadChannelIcons,
+    CHANNEL_CONFIG, getChannelConfig, buildMarkerIconSync, CHANNEL_LIST,
+    preloadChannelIcons, getCachedIcon,
 } from "../../utils/ClientMarkerIcons";
 import {
     MUNICIPIOS_COCHABAMBA, getMunicipioForPoint, groupClientsByMunicipio,
@@ -45,7 +45,7 @@ const buildOrderedChannelMarker = (orderIndex, channel, isSelected = true, pulsi
     const color = config.color;
     const colorDark = config.colorDark;
     const ringOpacity = pulsing ? 0.4 : 0;
-    const imageSrc = config.imageBase64 || null;
+    const imageSrc = getCachedIcon(channel);
 
     const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
@@ -825,8 +825,8 @@ export default function CreateRouteComponent() {
                             if (!location.client_location?.latitud || !location.client_location?.longitud) return null;
                             const selected = isClientSelected(location._id);
                             if (selected) return null;
-                            const icon = window.google && iconsReady
-    ? buildMarkerIcon(location.userCategory, window.google.maps, false)
+                          const icon = window.google && iconsReady
+    ? buildMarkerIconSync(location.userCategory, window.google.maps, false)
     : undefined;
                             return (
                                 <Marker
