@@ -398,7 +398,7 @@ const ObjectiveDepartmentComponent = ({ item, setViewMode, setSelectedRegion, se
                 >
                   <option value="">Selecciona una categoría</option>
                   {Array.isArray(salesData) && salesData.map((cat) => (
-                    <option key={cat._id} value={cat.name}>{cat.name}</option>
+                    <option key={cat._id} value={cat.categoryName}>{cat.categoryName}</option>
                   ))}
                 </select>
               </div>
