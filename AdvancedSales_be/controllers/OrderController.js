@@ -1733,24 +1733,131 @@ const deleteOrder = async (req, res) => {
 };
 const getOrderByDeliverStatusAnd = async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.body.salesId)) {
+    const {
+      id_owner,
+      salesId,
+      orderStatus,
+      accountStatus,
+      region,
+      fullName,
+      startDate,
+      endDate,
+      page,
+      limit,
+      sortBy = "creationDate",
+      sortOrder = "desc",
+    } = req.body;
+
+    if (!id_owner) {
+      return res.status(400).json({ message: "id_owner es requerido" });
+    }
+    if (!mongoose.Types.ObjectId.isValid(salesId)) {
       return res.status(400).json({ message: "salesId no es válido" });
     }
-    const query = {
-      id_owner: req.body.id_owner,
-      salesId: new mongoose.Types.ObjectId(req.body.salesId),
-    };
-    if (req.body.orderStatus) {
-      query.orderStatus = req.body.orderStatus;
-    }
-    const orderList = await Order.find(query)
-      .populate("salesId")
-      .populate("id_client");
 
-    res.json(orderList);
+    const pageNumber = Math.max(parseInt(page) || 1, 1);
+    const limitNumber = Math.min(Math.max(parseInt(limit) || 10, 1), 100);
+
+    const matchStage = {
+      id_owner,
+      salesId: new mongoose.Types.ObjectId(salesId),
+    };
+    if (orderStatus) matchStage.orderStatus = orderStatus;
+    if (accountStatus) matchStage.accountStatus = accountStatus;
+    if (region) matchStage.region = region;
+
+    if (startDate && endDate) {
+      const desde = new Date(`${startDate}T04:00:00.000Z`);
+      const hasta = new Date(`${endDate}T04:00:00.000Z`);
+      hasta.setUTCDate(hasta.getUTCDate() + 1);
+      matchStage.creationDate = { $gte: desde, $lt: hasta };
+    }
+
+    const pipeline = [{ $match: matchStage }];
+
+    if (fullName && fullName.trim()) {
+      const q = fullName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      const safe = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      pipeline.push(
+        {
+          $lookup: {
+            from: "clients",
+            localField: "id_client",
+            foreignField: "_id",
+            as: "clienteBusqueda",
+          },
+        },
+        { $unwind: { path: "$clienteBusqueda", preserveNullAndEmptyArrays: true } },
+        {
+          $addFields: {
+            nombreCompleto: {
+              $concat: [
+                { $ifNull: ["$clienteBusqueda.name", ""] },
+                " ",
+                { $ifNull: ["$clienteBusqueda.lastName", ""] },
+              ],
+            },
+          },
+        },
+        {
+          $match: {
+            $or: [
+              { nombreCompleto: { $regex: safe, $options: "i" } },
+              { "clienteBusqueda.company": { $regex: safe, $options: "i" } },
+              { receiveNumber: { $regex: safe, $options: "i" } },
+            ],
+          },
+        },
+        { $unset: ["clienteBusqueda", "nombreCompleto"] }
+      );
+    }
+
+    const sortableFields = ["creationDate", "totalAmount", "dueDate", "orderStatus"];
+    const sortField = sortableFields.includes(sortBy) ? sortBy : "creationDate";
+    const sortDir = sortOrder === "asc" ? 1 : -1;
+
+    pipeline.push({ $sort: { [sortField]: sortDir, _id: -1 } });
+
+    pipeline.push({
+      $facet: {
+        data: [
+          { $skip: (pageNumber - 1) * limitNumber },
+          { $limit: limitNumber },
+        ],
+        meta: [{ $count: "total" }],
+        resumen: [
+          {
+            $group: {
+              _id: null,
+              montoTotal: { $sum: "$totalAmount" },
+            },
+          },
+        ],
+      },
+    });
+
+    const [result] = await Order.aggregate(pipeline);
+    const orders = result?.data || [];
+    const totalRecords = result?.meta?.[0]?.total || 0;
+    const montoTotal = result?.resumen?.[0]?.montoTotal || 0;
+
+    await Order.populate(orders, [
+      { path: "salesId" },
+      { path: "id_client", populate: { path: "client_location" } },
+    ]);
+
+    res.json({
+      orders,
+      totalPages: Math.ceil(totalRecords / limitNumber) || 1,
+      currentPage: pageNumber,
+      totalRecords,
+      montoTotal,
+      hasNextPage: pageNumber * limitNumber < totalRecords,
+      hasPrevPage: pageNumber > 1,
+    });
   } catch (error) {
     console.error("Error al obtener órdenes:", error);
-    res.status(500).json({ message: "Error al obtener las órdenes", error: error.message });
+    res.status(500).json({ message: "Error al obtener las órdenes" });
   }
 };
 const updateOrderTracking = async (req, res) => {
