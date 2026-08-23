@@ -5,7 +5,7 @@ import { preloadChannelIcons } from "../utils/ClientMarkerIcons";
 import { getMunicipioForPoint, groupClientsByMunicipio, MUNICIPIOS_COCHABAMBA } from "../utils/CochabambaMunicipios";
 import { DEPOT, DEFAULT_TRUCK_CAPACITY, DEFAULT_ZOOM } from "../utils/MapDetails";
 import {
-  optimizeRoutes, calculateOrderBoxes, calculateOrderPacking,
+  optimizeRoutes, 
   generateStackingPlan, MIN_ORDERS_TO_OPTIMIZE,
 } from "../utils/RouteOptimizer";
 import { TABS, OPTIMIZATION_METHOD, buildMarkerFromOrder, generateGroupId } from "../constants/routeConfigs";
@@ -32,6 +32,7 @@ export const useDeliveryRoute = () => {
   const [pageSize, setPageSize] = useState(10);
   const [alertModal, setAlertModal] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+  const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [iconsReady, setIconsReady] = useState(false);
@@ -42,10 +43,25 @@ export const useDeliveryRoute = () => {
   const [activeTab, setActiveTab] = useState(TABS.PEDIDOS);
   const [selectedMunicipio, setSelectedMunicipio] = useState("");
 
+  const toastTimer = useRef(null);
+
   const user = localStorage.getItem("id_owner");
   const token = localStorage.getItem("token");
 
   useEffect(() => { preloadChannelIcons().then(() => setIconsReady(true)); }, []);
+
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
+
+  const showToast = useCallback((payload) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ tone: "warning", ...payload });
+    toastTimer.current = setTimeout(() => setToast(null), 4500);
+  }, []);
+
+  const dismissToast = useCallback(() => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(null);
+  }, []);
 
   const selectedVendor = useMemo(() => vendedores.find(v => v._id === selectedSaler), [vendedores, selectedSaler]);
 
@@ -54,7 +70,7 @@ export const useDeliveryRoute = () => {
     return Number(selectedVendor?.truckCapacity) || DEFAULT_TRUCK_CAPACITY;
   }, [selectedVendor, customCapacity]);
 
-const currentLoad = useMemo(() => aggregateTripPacking(selectedMarkers).physicalBoxes, [selectedMarkers]);
+  const currentLoad = useMemo(() => aggregateTripPacking(selectedMarkers).physicalBoxes, [selectedMarkers]);
   const utilizationPct = truckCapacity > 0 ? Math.min(100, (currentLoad / truckCapacity) * 100) : 0;
   const isOverCapacity = currentLoad > truckCapacity;
   const canOptimize = markers.length >= MIN_ORDERS_TO_OPTIMIZE && !!selectedSaler;
@@ -86,8 +102,13 @@ const currentLoad = useMemo(() => aggregateTripPacking(selectedMarkers).physical
     setLoading(true);
     try {
       const res = await axios.post(API_URL + "/whatsapp/order/status/id", {
-        id_owner: user, page, limit: pageSize, fullName: searchTerm,
-        salesId: selectedSaler, status: "aproved", region: "TOTAL CBB",
+        id_owner: user,
+        page,
+        limit: pageSize,
+        fullName: searchTerm,
+        salesId: selectedSaler,
+        status: "aproved",
+        region: "TOTAL CBB",
       }, { headers: { Authorization: `Bearer ${token}` } });
       setMarkers(res.data.orders || []);
       setTotalPages(res.data.totalPages || 1);
@@ -141,13 +162,23 @@ const currentLoad = useMemo(() => aggregateTripPacking(selectedMarkers).physical
   const showAlert = (msg) => { setAlertMessage(msg); setAlertModal(true); };
 
   const handleOptimize = async () => {
-    if (!selectedSaler) { showAlert("Selecciona un repartidor primero."); return; }
-    if (markers.length < MIN_ORDERS_TO_OPTIMIZE) { showAlert(`Mínimo ${MIN_ORDERS_TO_OPTIMIZE} pedidos.`); return; }
+    if (!selectedSaler) {
+      showToast({ tone: "info", title: "Falta el repartidor", message: "Elegí un repartidor para poder optimizar." });
+      return;
+    }
+    if (markers.length < MIN_ORDERS_TO_OPTIMIZE) {
+      showToast({ tone: "info", title: "Pocos pedidos", message: `Necesitás al menos ${MIN_ORDERS_TO_OPTIMIZE} pedidos para optimizar.` });
+      return;
+    }
     setIsOptimizing(true); setOptimizationResult(null);
     await new Promise(r => setTimeout(r, 600));
     const source = selectedMarkers.length > 0
       ? selectedMarkers.map(sm => markers.find(m => m._id === sm._id) || sm) : markers;
-    if (!source.length) { showAlert("No hay pedidos."); setIsOptimizing(false); return; }
+    if (!source.length) {
+      showToast({ tone: "info", title: "Sin pedidos", message: "No hay pedidos disponibles para armar la ruta." });
+      setIsOptimizing(false);
+      return;
+    }
     const enriched = source.map(o => ({ ...o, client_location: o.client_location || o.id_client?.client_location }));
     const result = optimizeRoutes(enriched, truckCapacity, DEPOT);
     setOptimizationResult(result);
@@ -169,13 +200,26 @@ const currentLoad = useMemo(() => aggregateTripPacking(selectedMarkers).physical
   };
 
   const handleMarkerClick = (location) => {
-    if (!selectedSaler) { showAlert("Seleccione un repartidor antes."); return; }
-    const next = aggregateTripPacking([...selectedMarkers, location]).physicalBoxes;
-if (next > truckCapacity && !selectedMarkers.find(m => m._id === location._id)) {
-      showAlert(`Excede capacidad.\nActual: ${currentLoad} · Pedido: ${next - currentLoad} · Máx: ${truckCapacity}\n\nUsa "Optimizar" para dividir.`);
+    if (!selectedSaler) {
+      showToast({ tone: "info", title: "Falta el repartidor", message: "Elegí un repartidor antes de agregar pedidos." });
       return;
     }
-    setSelectedMarkers(prev => prev.find(i => i._id === location._id) ? prev : [...prev, buildMarkerFromOrder(location)]);
+    const alreadyIn = selectedMarkers.some(m => m._id === location._id);
+    if (alreadyIn) return;
+
+    const next = aggregateTripPacking([...selectedMarkers, location]).physicalBoxes;
+    if (next > truckCapacity) {
+      const orderBoxes = next - currentLoad;
+      const freeBoxes = Math.max(0, truckCapacity - currentLoad);
+      showToast({
+        tone: "warning",
+        title: "No entra en el camión",
+        message: `Este pedido son ${orderBoxes} cajas y solo quedan ${freeBoxes} libres de ${truckCapacity}.`,
+        hint: "Usá Planificar flota para repartirlo entre varios repartidores.",
+      });
+      return;
+    }
+    setSelectedMarkers(prev => [...prev, buildMarkerFromOrder(location)]);
   };
 
   const handleDelete = (clientId) => setSelectedMarkers(prev => prev.filter(c => c._id !== clientId));
@@ -256,9 +300,16 @@ if (next > truckCapacity && !selectedMarkers.find(m => m._id === location._id)) 
           ok++;
         }
       }
-      if (ok === optimizationResult.trips.length) { loadMarkersFromAPI(); setIsOpen(false); cleanData(); }
-      else { showAlert(`${ok} de ${optimizationResult.trips.length} viajes creados.`); loadMarkersFromAPI(); }
-    } catch (e) { showAlert("Error al crear las rutas."); }
+      if (ok === optimizationResult.trips.length) {
+        loadMarkersFromAPI(); setIsOpen(false); cleanData();
+        showToast({ tone: "success", title: "Rutas creadas", message: `Se crearon ${ok} viajes correctamente.` });
+      } else {
+        loadMarkersFromAPI();
+        showToast({ tone: "warning", title: "Creación parcial", message: `Se crearon ${ok} de ${optimizationResult.trips.length} viajes.` });
+      }
+    } catch (e) {
+      showToast({ tone: "error", title: "No se pudo crear", message: "Hubo un error al crear las rutas. Intentá de nuevo." });
+    }
     finally { setCreating(false); }
   };
 
@@ -292,8 +343,11 @@ if (next > truckCapacity && !selectedMarkers.find(m => m._id === location._id)) 
             { headers: { Authorization: `Bearer ${token}` } });
         }));
         loadMarkersFromAPI(); setIsOpen(false); cleanData();
+        showToast({ tone: "success", title: "Ruta creada", message: "La ruta quedó asignada al repartidor." });
       }
-    } catch (e) {}
+    } catch (e) {
+      showToast({ tone: "error", title: "No se pudo crear", message: "Hubo un error al crear la ruta. Intentá de nuevo." });
+    }
     finally { setCreating(false); }
   };
 
@@ -309,7 +363,8 @@ if (next > truckCapacity && !selectedMarkers.find(m => m._id === location._id)) 
     searchTerm, setSearchTerm, page, setPage, pageSize, setPageSize,
     totalPages, totalOrders, startDate, setStartDate, endDate, setEndDate,
     routeName, setRouteName, isOpen, setIsOpen,
-    alertModal, setAlertModal, alertMessage,
+    alertModal, setAlertModal, alertMessage, showAlert,
+    toast, showToast, dismissToast,
     directionsResponse, setDirectionsResponse,
     optimizationResult, setOptimizationResult,
     activeTab, setActiveTab,

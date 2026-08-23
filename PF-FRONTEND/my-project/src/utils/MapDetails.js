@@ -33,7 +33,7 @@ export const DEFAULT_CENTER = { lat: -17.3835, lng: -66.1568 };
 export const DEFAULT_ZOOM = 12;
 export const VIEW_ALL_LIMIT = 500;
 export const DEFAULT_TRUCK_CAPACITY = 80;
-export const DEPOT = { lat: -17.3835, lng: -66.1568 };
+export const DEPOT = { lat: -17.390128684470287,lng: -66.16321713666862};
 export const CONTAINER_STYLE = { width: "100%", height: "100%" };
 export const CITIES = [
     { value: "TOTAL CBB", label: "Cochabamba" },

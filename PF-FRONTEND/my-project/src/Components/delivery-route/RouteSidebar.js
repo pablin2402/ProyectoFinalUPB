@@ -1,13 +1,15 @@
 import React from "react";
 import {
   FaTruck, FaChevronLeft, FaChevronRight, FaRoute, FaBoxes,
-  FaInfoCircle, FaMagic, FaReceipt, FaTimes,
-} from "react-icons/fa";
+  FaInfoCircle, FaMagic, FaReceipt, FaTimes, FaNetworkWired,
+  FaHandPointer} from "react-icons/fa";
 import { motion, useReducedMotion } from "framer-motion";
 import { MUNICIPIOS_COCHABAMBA } from "../../utils/CochabambaMunicipios";
 import { MIN_ORDERS_TO_OPTIMIZE } from "../../utils/RouteOptimizer";
 import TextInputFilter from "../../Components/LittleComponents/TextInputFilter";
 import { TABS } from "../../constants/routeConfigs";
+
+const PAGE_SIZES = [10, 20, 50];
 
 const capacityColor = (pct, over) => {
   if (over) return { bar: "#DC2626", text: "text-red-600", chip: "bg-red-50 text-red-700" };
@@ -24,9 +26,13 @@ export const RouteSidebar = ({
   canOptimize, isOptimizing, onOptimize, markers,
   selectedMarkers, onCreateManual,
   optimizationResult, activeTab, setActiveTab,
+  fleetSize = 0, planningOrdersCount = 0, onFleetPlan, planning, hasPlan,
+  onManualAssign,
+  pageSize, setPageSize,
 }) => {
   const reducedMotion = useReducedMotion();
   const cap = capacityColor(utilizationPct, isOverCapacity);
+  const canFleetPlan = fleetSize > 0 && planningOrdersCount >= 2 && !planning && !hasPlan;
 
   return (
     <div
@@ -43,7 +49,9 @@ export const RouteSidebar = ({
                 <div>
                   <h1 className="text-base font-extrabold text-gray-900 leading-tight tracking-tight">Rutas de entrega</h1>
                   <p className="text-xs text-gray-500 font-medium">
-                    {totalOrders} pedido{totalOrders !== 1 ? "s" : ""} disponible{totalOrders !== 1 ? "s" : ""}
+                    {hasPlan
+                      ? "Plan de flota activo"
+                      : `${totalOrders} pedido${totalOrders !== 1 ? "s" : ""} disponible${totalOrders !== 1 ? "s" : ""}`}
                   </p>
                 </div>
               </div>
@@ -57,147 +65,227 @@ export const RouteSidebar = ({
               </button>
             </div>
 
-            <div className="mt-3 rounded-2xl border border-gray-200 bg-gray-50/70 p-3">
-              <label htmlFor="rs-repartidor" className="sr-only">Repartidor</label>
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center flex-shrink-0">
-                  <FaTruck size={13} className="text-gray-500" aria-hidden="true" />
+            {!hasPlan && (
+              <div className="mt-3 rounded-2xl border border-gray-200 bg-gray-50/70 p-3">
+                <label htmlFor="rs-repartidor" className="sr-only">Repartidor</label>
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center flex-shrink-0">
+                    <FaTruck size={13} className="text-gray-500" aria-hidden="true" />
+                  </div>
+                  <select
+                    id="rs-repartidor"
+                    value={selectedSaler}
+                    onChange={onSalerChange}
+                    className="flex-1 min-w-0 px-3 py-2 text-sm font-semibold text-gray-800 bg-white border border-gray-200 rounded-xl cursor-pointer transition focus:outline-none focus:border-[#D3423E] focus:ring-2 focus:ring-red-100"
+                  >
+                    <option value="">Sin repartidor asignado</option>
+                    {vendedores.map((v) => (
+                      <option key={v._id} value={v._id}>
+                        {v.fullName} {v.lastName}{v.truckCapacity ? ` · ${v.truckCapacity} cajas` : ""}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <select
-                  id="rs-repartidor"
-                  value={selectedSaler}
-                  onChange={onSalerChange}
-                  className="flex-1 min-w-0 px-3 py-2 text-sm font-semibold text-gray-800 bg-white border border-gray-200 rounded-xl cursor-pointer transition focus:outline-none focus:border-[#D3423E] focus:ring-2 focus:ring-red-100"
-                >
-                  <option value="">Sin repartidor asignado</option>
-                  {vendedores.map((v) => (
-                    <option key={v._id} value={v._id}>
-                      {v.fullName} {v.lastName}{v.truckCapacity ? ` · ${v.truckCapacity} cajas` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
 
-              {selectedSaler && (
-                <div className="mt-3 pt-3 border-t border-gray-200">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <FaBoxes size={10} className="text-gray-400" aria-hidden="true" />
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Capacidad del camión</span>
+                {selectedSaler && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <FaBoxes size={10} className="text-gray-400" aria-hidden="true" />
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Capacidad del camión</span>
+                      </div>
+                      <span className={`text-[11px] font-extrabold px-2 py-0.5 rounded-full ${cap.chip}`}>
+                        {Math.round(utilizationPct)}%
+                      </span>
                     </div>
-                    <span className={`text-[11px] font-extrabold px-2 py-0.5 rounded-full ${cap.chip}`}>
-                      {Math.round(utilizationPct)}%
-                    </span>
+                    <div className="flex items-baseline gap-1 mb-1.5">
+                      <span className={`text-2xl font-black tabular-nums ${cap.text}`}>{currentLoad}</span>
+                      <span className="text-xs text-gray-500 font-bold">/ {truckCapacity} cajas</span>
+                    </div>
+                    <div
+                      className="w-full h-2 bg-gray-200 rounded-full overflow-hidden"
+                      role="progressbar"
+                      aria-valuenow={Math.round(utilizationPct)}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label="Uso de capacidad"
+                    >
+                      <motion.div
+                        initial={reducedMotion ? false : { width: 0 }}
+                        animate={{ width: `${Math.min(utilizationPct, 100)}%` }}
+                        transition={{ duration: reducedMotion ? 0 : 0.4 }}
+                        className="h-full rounded-full"
+                        style={{ backgroundColor: cap.bar }}
+                      />
+                    </div>
+                    {isOverCapacity && (
+                      <p className="text-[11px] text-red-600 font-bold mt-1.5 flex items-start gap-1" role="alert">
+                        <FaInfoCircle className="mt-0.5 shrink-0" size={10} aria-hidden="true" />
+                        Excede la capacidad por {currentLoad - truckCapacity} cajas.
+                      </p>
+                    )}
                   </div>
-                  <div className="flex items-baseline gap-1 mb-1.5">
-                    <span className={`text-2xl font-black tabular-nums ${cap.text}`}>{currentLoad}</span>
-                    <span className="text-xs text-gray-500 font-bold">/ {truckCapacity} cajas</span>
-                  </div>
-                  <div
-                    className="w-full h-2 bg-gray-200 rounded-full overflow-hidden"
-                    role="progressbar"
-                    aria-valuenow={Math.round(utilizationPct)}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label="Uso de capacidad"
-                  >
-                    <motion.div
-                      initial={reducedMotion ? false : { width: 0 }}
-                      animate={{ width: `${Math.min(utilizationPct, 100)}%` }}
-                      transition={{ duration: reducedMotion ? 0 : 0.4 }}
-                      className="h-full rounded-full"
-                      style={{ backgroundColor: cap.bar }}
-                    />
-                  </div>
-                  {isOverCapacity && (
-                    <p className="text-[11px] text-red-600 font-bold mt-1.5 flex items-start gap-1" role="alert">
-                      <FaInfoCircle className="mt-0.5 shrink-0" size={10} aria-hidden="true" />
-                      Excede la capacidad por {currentLoad - truckCapacity} cajas.
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="px-4 pt-3 pb-3 border-b border-gray-100 bg-white flex-shrink-0">
-            <div className="relative mb-2.5">
-              <TextInputFilter value={searchTerm} onChange={setSearchTerm} onEnter={onSearch} placeholder="Buscar pedido por cliente…" />
-            </div>
-
-            <div className="flex items-center gap-2 mb-3">
-              <label htmlFor="rs-zona" className="sr-only">Zona</label>
-              <select
-                id="rs-zona"
-                value={selectedMunicipio}
-                onChange={(e) => { setSelectedMunicipio(e.target.value); if (e.target.value) fitMunicipio(e.target.value); }}
-                className="flex-1 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl cursor-pointer transition focus:outline-none focus:border-[#D3423E] focus:ring-2 focus:ring-red-100"
-              >
-                <option value="">Todas las zonas</option>
-                {Object.values(MUNICIPIOS_COCHABAMBA).map((m) => (
-                  <option key={m.id} value={m.id}>{m.name} ({municipioGroups[m.id]?.count || 0})</option>
-                ))}
-              </select>
-              {selectedMunicipio && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedMunicipio("")}
-                  aria-label="Quitar filtro de zona"
-                  className="p-2.5 text-gray-400 hover:text-[#D3423E] hover:bg-red-50 rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D3423E]/40"
-                >
-                  <FaTimes size={12} aria-hidden="true" />
-                </button>
-              )}
-            </div>
-
-            <motion.button
-              type="button"
-              whileHover={canOptimize && !reducedMotion ? { scale: 1.01 } : {}}
-              whileTap={canOptimize && !reducedMotion ? { scale: 0.99 } : {}}
-              onClick={onOptimize}
-              disabled={!canOptimize || isOptimizing}
-              className={`w-full px-4 py-3 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D3423E]/50 ${
-                !canOptimize
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-[#D3423E] text-white shadow-lg shadow-red-200 hover:bg-[#bb3330]"
-              }`}
-            >
-              {isOptimizing ? (
-                <>
-                  <motion.span
-                    animate={reducedMotion ? {} : { rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="inline-flex"
-                  >
-                    <FaMagic size={13} aria-hidden="true" />
-                  </motion.span>
-                  Optimizando…
-                </>
-              ) : (
-                <>
-                  <FaMagic size={13} aria-hidden="true" />
-                  {!selectedSaler
-                    ? "Selecciona un repartidor"
-                    : markers.length < MIN_ORDERS_TO_OPTIMIZE
-                      ? `Mínimo ${MIN_ORDERS_TO_OPTIMIZE} pedidos (tienes ${markers.length})`
-                      : "Optimizar ruta automáticamente"}
-                </>
-              )}
-            </motion.button>
-
-            {selectedMarkers.length > 0 && !optimizationResult && (
-              <button
-                type="button"
-                onClick={onCreateManual}
-                className="w-full mt-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold text-sm rounded-2xl hover:border-[#D3423E] hover:text-[#D3423E] transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D3423E]/40"
-              >
-                <FaRoute size={12} aria-hidden="true" />
-                Crear ruta manual ({selectedMarkers.length})
-              </button>
+                )}
+              </div>
             )}
           </div>
 
-          {optimizationResult && (
+          <div className="px-4 pt-3 pb-3 border-b border-gray-100 bg-white flex-shrink-0">
+            {hasPlan ? (
+              <>
+                <div className="flex items-center justify-between gap-2 mb-2.5">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">
+                    Pedidos por página
+                  </span>
+                  <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-xl">
+                    {PAGE_SIZES.map((n) => {
+                      const active = Number(pageSize) === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setPageSize(n)}
+                          aria-pressed={active}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-extrabold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D3423E]/40 ${
+                            active
+                              ? "bg-white text-[#D3423E] shadow-sm"
+                              : "text-gray-500 hover:text-gray-700"
+                          }`}
+                        >
+                          {n}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={onManualAssign}
+                  className="w-full px-4 py-3 rounded-2xl font-bold text-sm bg-white border border-gray-200 text-gray-700 hover:border-[#D3423E] hover:text-[#D3423E] transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D3423E]/40"
+                >
+                  <FaHandPointer size={12} aria-hidden="true" />
+                  Asignar manualmente
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="relative mb-2.5">
+                  <TextInputFilter value={searchTerm} onChange={setSearchTerm} onEnter={onSearch} placeholder="Buscar pedido por cliente…" />
+                </div>
+
+                <div className="flex items-center gap-2 mb-2.5">
+                  <label htmlFor="rs-zona" className="sr-only">Zona</label>
+                  <select
+                    id="rs-zona"
+                    value={selectedMunicipio}
+                    onChange={(e) => { setSelectedMunicipio(e.target.value); if (e.target.value) fitMunicipio(e.target.value); }}
+                    className="flex-1 min-w-0 px-3 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl cursor-pointer transition focus:outline-none focus:border-[#D3423E] focus:ring-2 focus:ring-red-100"
+                  >
+                    <option value="">Todas las zonas</option>
+                    {Object.values(MUNICIPIOS_COCHABAMBA).map((m) => (
+                      <option key={m.id} value={m.id}>{m.name} ({municipioGroups[m.id]?.count || 0})</option>
+                    ))}
+                  </select>
+                  {selectedMunicipio && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMunicipio("")}
+                      aria-label="Quitar filtro de zona"
+                      className="p-2.5 text-gray-400 hover:text-[#D3423E] hover:bg-red-50 rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D3423E]/40"
+                    >
+                      <FaTimes size={12} aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+
+                <motion.button
+                  type="button"
+                  whileHover={canFleetPlan && !reducedMotion ? { scale: 1.01 } : {}}
+                  whileTap={canFleetPlan && !reducedMotion ? { scale: 0.99 } : {}}
+                  onClick={onFleetPlan}
+                  disabled={!canFleetPlan}
+                  className={`w-full px-4 py-3 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F172A]/40 ${
+                    !canFleetPlan
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-gray-900 text-white shadow-lg shadow-gray-300 hover:bg-gray-800"
+                  }`}
+                >
+                  {planning ? (
+                    <>
+                      <motion.span
+                        animate={reducedMotion ? {} : { rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="inline-flex"
+                      >
+                        <FaNetworkWired size={13} aria-hidden="true" />
+                      </motion.span>
+                      Resolviendo CVRP…
+                    </>
+                  ) : (
+                    <>
+                      <FaNetworkWired size={13} aria-hidden="true" />
+                      {fleetSize === 0
+                        ? "Sin repartidores con capacidad"
+                        : `Planificar flota (${fleetSize} repartidores · ${planningOrdersCount} pedidos)`}
+                    </>
+                  )}
+                </motion.button>
+
+                <p className="text-[10px] text-gray-400 font-semibold text-center mt-1.5 mb-2.5">
+                  Asigna y ordena todos los pedidos entre los repartidores
+                </p>
+
+                <motion.button
+                  type="button"
+                  whileHover={canOptimize && !reducedMotion ? { scale: 1.01 } : {}}
+                  whileTap={canOptimize && !reducedMotion ? { scale: 0.99 } : {}}
+                  onClick={onOptimize}
+                  disabled={!canOptimize || isOptimizing}
+                  className={`w-full px-4 py-3 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D3423E]/50 ${
+                    !canOptimize
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-[#D3423E] text-white shadow-lg shadow-red-200 hover:bg-[#bb3330]"
+                  }`}
+                >
+                  {isOptimizing ? (
+                    <>
+                      <motion.span
+                        animate={reducedMotion ? {} : { rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="inline-flex"
+                      >
+                        <FaMagic size={13} aria-hidden="true" />
+                      </motion.span>
+                      Optimizando…
+                    </>
+                  ) : (
+                    <>
+                      <FaMagic size={13} aria-hidden="true" />
+                      {!selectedSaler
+                        ? "Selecciona un repartidor"
+                        : markers.length < MIN_ORDERS_TO_OPTIMIZE
+                          ? `Mínimo ${MIN_ORDERS_TO_OPTIMIZE} pedidos (tienes ${markers.length})`
+                          : "Optimizar ruta de un repartidor"}
+                    </>
+                  )}
+                </motion.button>
+
+                {selectedMarkers.length > 0 && !optimizationResult && (
+                  <button
+                    type="button"
+                    onClick={onCreateManual}
+                    className="w-full mt-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold text-sm rounded-2xl hover:border-[#D3423E] hover:text-[#D3423E] transition-colors flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D3423E]/40"
+                  >
+                    <FaRoute size={12} aria-hidden="true" />
+                    Crear ruta manual ({selectedMarkers.length})
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
+          {optimizationResult && !hasPlan && (
             <div className="px-4 py-2 border-b border-gray-100 bg-white flex-shrink-0">
               <div role="tablist" aria-label="Vista del panel" className="flex items-center gap-1 p-1 bg-gray-100 rounded-xl">
                 {[

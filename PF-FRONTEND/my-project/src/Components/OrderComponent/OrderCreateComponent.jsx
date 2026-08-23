@@ -186,7 +186,6 @@ const OrderCreateComponent = () => {
     try {
       const orderResponse = await Promise.race([
         axios.post(API_URL + "/whatsapp/order", {
-          creationDate: new Date(),
           receiveNumber: generateReceiveNumber(),
           noteAditional: formData.note,
           id_owner: user,
@@ -211,6 +210,9 @@ const OrderCreateComponent = () => {
           dueDate: formData.fechaPago,
           id_client: selectedCliente?.value || "No seleccionado",
           salesId: formData.vendedorId,
+          creationDate: new Date(),
+          orderStatus: "created",
+          payStatus: "Pendiente",
           orderTrackId: null,
           region: formData.region || "No seleccionado",
         }, { headers: { Authorization: `Bearer ${token}` } }),
@@ -298,27 +300,24 @@ const OrderCreateComponent = () => {
                     disabled={!accessible}
                     className={`flex flex-col items-center gap-2 transition-all ${!accessible ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
-                    <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-sm ${
-                      isCompleted
+                    <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-sm ${isCompleted
                         ? 'bg-green-500 text-white shadow-green-200'
                         : isActive
                           ? 'bg-[#D3423E] text-white shadow-red-200 shadow-md ring-4 ring-red-100'
                           : 'bg-gray-100 text-gray-400'
-                    }`}>
+                      }`}>
                       {isCompleted ? <FaCheck size={20} /> : <Icon size={22} />}
                       {isActive && (
                         <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#D3423E] rounded-full" />
                       )}
                     </div>
                     <div className="text-center">
-                      <p className={`text-xs font-bold leading-tight ${
-                        isActive ? 'text-[#D3423E]' : isCompleted ? 'text-green-600' : 'text-gray-400'
-                      }`}>
+                      <p className={`text-xs font-bold leading-tight ${isActive ? 'text-[#D3423E]' : isCompleted ? 'text-green-600' : 'text-gray-400'
+                        }`}>
                         {step.label}
                       </p>
-                      <p className={`text-[10px] mt-0.5 ${
-                        isActive ? 'text-red-300' : isCompleted ? 'text-green-400' : 'text-gray-300'
-                      }`}>
+                      <p className={`text-[10px] mt-0.5 ${isActive ? 'text-red-300' : isCompleted ? 'text-green-400' : 'text-gray-300'
+                        }`}>
                         {isCompleted ? 'Completado' : isActive ? 'En progreso' : 'Pendiente'}
                       </p>
                     </div>
@@ -355,7 +354,7 @@ const OrderCreateComponent = () => {
                     <select
                       value={selectedCategory}
                       onChange={(e) => { setSelectedCategory(e.target.value); setPage(1); }}
-  className="app-select"
+                      className="app-select"
                     >
                       <option value="">Todas las categorías</option>
                       {categoriesList.map((c) => (

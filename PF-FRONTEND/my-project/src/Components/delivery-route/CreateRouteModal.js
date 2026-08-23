@@ -3,6 +3,7 @@ import { FaMagic, FaRoute, FaTimes, FaCheck, FaBuilding, FaInfoCircle } from "re
 import { motion, AnimatePresence } from "framer-motion";
 import { getTripColor } from "../../utils/RouteOptimizer";
 import StackingPlanCard from "../../utils/StackingPlanCard";
+import { DateRangePicker } from "../../Components/LittleComponents/DateRangePicker";
 
 const SummaryItem = ({ label, value, highlight }) => (
   <div>
@@ -49,18 +50,13 @@ export const CreateRouteModal = ({
                   Se crearán {optimizationResult.trips.length} rutas con sufijo "Viaje 1/N"...</p>
               )}
             </div>
-            <div className="flex flex-wrap gap-3 items-end">
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-wider">Desde</label>
-                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
-                  className="px-3 py-3 text-sm text-gray-700 border border-gray-200 rounded-xl bg-white focus:outline-none focus:border-[#D3423E] focus:ring-2 focus:ring-red-100" />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-wider">Hasta</label>
-                <input type="date" value={endDate} min={startDate} onChange={e => setEndDate(e.target.value)}
-                  className="px-3 py-3 text-sm text-gray-700 border border-gray-200 rounded-xl bg-white focus:outline-none focus:border-[#D3423E] focus:ring-2 focus:ring-red-100" />
-              </div>
-            </div>
+
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              setStartDate={setStartDate}
+              setEndDate={setEndDate}
+            />
 
             {optimizationResult ? (
               <div className="space-y-3">

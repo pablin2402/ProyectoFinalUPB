@@ -282,6 +282,7 @@ export default function DeliveryRouteComponent() {
       );
       setTotalPages(response.data.totalPages || 1);
       setListRoutes(response.data.data || []);
+      console.log(response.data.data)
       setSelectedMarkers([]);
       setDirectionsResponse(null);
     } catch (error) {
@@ -611,7 +612,7 @@ export default function DeliveryRouteComponent() {
                                               </div>
                                               <div className="flex-1 min-w-0">
                                                 <p className="text-xs font-bold text-gray-900 truncate">
-                                                  {stop.name} {stop.lastName}
+                                                  {stop.id_client.name} {stop.id_client.lastName}
                                                 </p>
                                               </div>
                                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 text-white ${vConfig.color}`}>
@@ -815,7 +816,7 @@ export default function DeliveryRouteComponent() {
               >
                 <div style={{ color: '#111', fontSize: '13px', maxWidth: '220px', padding: '4px' }}>
                   <h2 style={{ margin: 0, fontWeight: 'bold', fontSize: '14px' }}>
-                    {selectedClient.name} {selectedClient.lastName}
+                    {selectedClient.id_client.name} {selectedClient.id_client.lastName}
                   </h2>
                   {selectedClient.tripTime && (
                     <p style={{ margin: '6px 0 0 0', color: '#666' }}>
@@ -938,17 +939,17 @@ export default function DeliveryRouteComponent() {
                         </div>
                         <img
                           className="w-10 h-10 object-cover rounded-lg flex-shrink-0 bg-gray-100"
-                          src={client.profilePicture || FALLBACK_IMAGE}
-                          alt={client.name}
+                          src={client.id_client.profilePicture || FALLBACK_IMAGE}
+                          alt={client.id_client.name}
                           onError={(e) => { e.target.src = FALLBACK_IMAGE; }}
                         />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-gray-900 truncate">
-                            {client.name} {client.lastName}
+                            {client.id_client.name} {client.id_client.lastName}
                           </p>
                           <p className="text-[11px] text-gray-500 truncate flex items-center gap-1">
                             <FaMapMarkerAlt className="text-[#D3423E] flex-shrink-0" size={8} />
-                            {client.client_location?.direction || "Sin dirección"}
+                            {client.id_client.client_location?.direction || "Sin dirección"}
                           </p>
                         </div>
                       </div>
