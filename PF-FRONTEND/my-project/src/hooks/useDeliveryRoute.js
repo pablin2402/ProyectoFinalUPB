@@ -29,7 +29,7 @@ export const useDeliveryRoute = () => {
   const [directionsResponse, setDirectionsResponse] = useState(null);
   const [selectedMarkers, setSelectedMarkers] = useState([]);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(50);
   const [alertModal, setAlertModal] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [toast, setToast] = useState(null);

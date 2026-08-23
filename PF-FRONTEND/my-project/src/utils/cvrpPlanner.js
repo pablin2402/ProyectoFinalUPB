@@ -1,5 +1,6 @@
 const R = 6371;
 const EPS = 1e-9;
+const SPLIT_FACTOR = 1.5;
 const toRad = (d) => (d * Math.PI) / 180;
 
 export const haversine = (a, b) => {
@@ -50,6 +51,30 @@ const seqCost = (seq, D) => {
   return c + D[seq[seq.length - 1] + 1][0];
 };
 
+const makePenalty = (zones, zoneDepotKm) => (seq) => {
+  if (seq.length < 2) return 0;
+  const counts = new Map();
+  seq.forEach((i) => {
+    const z = zones[i];
+    counts.set(z, (counts.get(z) || 0) + 1);
+  });
+  if (counts.size <= 1) return 0;
+  let dominant = null;
+  let dominantCount = -1;
+  counts.forEach((c, z) => {
+    if (c > dominantCount) {
+      dominantCount = c;
+      dominant = z;
+    }
+  });
+  let p = 0;
+  counts.forEach((c, z) => {
+    if (z === dominant) return;
+    p += c * 2 * (zoneDepotKm[z] || 0) * SPLIT_FACTOR;
+  });
+  return p;
+};
+
 const twoOpt = (seq, D) => {
   if (seq.length < 3) return seq;
   let best = seq;
@@ -87,25 +112,49 @@ const bestInsertion = (seq, node, D) => {
   return { seq: bestSeq, cost: bestC };
 };
 
-const sweepOrder = (nodes, depot) => {
-  const ang = nodes.map((n) => Math.atan2(n.lat - depot.lat, n.lng - depot.lng));
-  const zones = new Map();
-  nodes.forEach((n, i) => {
-    const key = n.zone || "sin-zona";
-    if (!zones.has(key)) zones.set(key, []);
-    zones.get(key).push(i);
+const insertMany = (seq, list, D) => {
+  let cur = seq.slice();
+  list.forEach((n) => {
+    cur = bestInsertion(cur, n, D).seq;
   });
-  const meanAngle = (idxs) => {
-    const x = idxs.reduce((s, i) => s + Math.cos(ang[i]), 0) / idxs.length;
-    const y = idxs.reduce((s, i) => s + Math.sin(ang[i]), 0) / idxs.length;
-    return Math.atan2(y, x);
-  };
-  return [...zones.values()]
-    .sort((a, b) => meanAngle(a) - meanAngle(b))
-    .flatMap((idxs) => idxs.slice().sort((a, b) => ang[a] - ang[b]));
+  cur = twoOpt(cur, D);
+  return { seq: cur, cost: seqCost(cur, D) };
 };
 
-const interRouteImprove = (clusters, D, demands, passes = 4) => {
+const mergeRoutes = (clusters, D) => {
+  let merged = true;
+  let guard = 0;
+  while (merged && guard++ < 20) {
+    merged = false;
+    for (let a = 0; a < clusters.length && !merged; a++) {
+      for (let b = 0; b < clusters.length && !merged; b++) {
+        if (a === b) continue;
+        const A = clusters[a];
+        const B = clusters[b];
+        if (!A.seq.length || !B.seq.length) continue;
+        const total = A.load + B.load;
+        const host = A.vehicle.capacity >= B.vehicle.capacity ? A : B;
+        const guest = host === A ? B : A;
+        if (total > host.vehicle.capacity) continue;
+        const combined = twoOpt(host.seq.concat(guest.seq), D);
+        const after = seqCost(combined, D);
+        if (after <= A.cost + B.cost + EPS) {
+          host.seq = combined;
+          host.load = total;
+          host.cost = after;
+          guest.seq = [];
+          guest.load = 0;
+          guest.cost = 0;
+          merged = true;
+        }
+      }
+    }
+  }
+  return clusters;
+};
+
+const interRouteImprove = (clusters, D, demands, penalty, passes = 8) => {
+  const sc = (seq) => seqCost(seq, D) + penalty(seq);
   for (let pass = 0; pass < passes; pass++) {
     let changed = false;
     for (let a = 0; a < clusters.length; a++) {
@@ -118,15 +167,15 @@ const interRouteImprove = (clusters, D, demands, passes = 4) => {
           if (B.load + demands[node] > B.vehicle.capacity) continue;
           const strippedA = A.seq.filter((_, k) => k !== i);
           const ins = bestInsertion(B.seq, node, D);
-          const before = A.cost + B.cost;
-          const after = seqCost(strippedA, D) + ins.cost;
+          const before = sc(A.seq) + sc(B.seq);
+          const after = sc(strippedA) + sc(ins.seq);
           if (after < before - EPS) {
             A.seq = strippedA;
             A.load -= demands[node];
             A.cost = seqCost(strippedA, D);
             B.seq = ins.seq;
             B.load += demands[node];
-            B.cost = ins.cost;
+            B.cost = seqCost(ins.seq, D);
             changed = true;
             break;
           }
@@ -150,8 +199,9 @@ const interRouteImprove = (clusters, D, demands, passes = 4) => {
             sb[j] = na;
             const oa = twoOpt(sa, D);
             const ob = twoOpt(sb, D);
-            const after = seqCost(oa, D) + seqCost(ob, D);
-            if (after < A.cost + B.cost - EPS) {
+            const before = sc(A.seq) + sc(B.seq);
+            const after = sc(oa) + sc(ob);
+            if (after < before - EPS) {
               A.seq = oa;
               B.seq = ob;
               A.load += demands[nb] - demands[na];
@@ -198,46 +248,109 @@ export const planRoutes = ({ orders, depot, vehicles, defaultCapacity = 0 }) => 
   if (!nodes.length) return { ...empty, unassigned: [], oversize };
 
   const demands = nodes.map((n) => n.boxes);
-  const totalDemand = demands.reduce((s, d) => s + d, 0);
+  const zones = nodes.map((n) => n.zone || "sin-zona");
   const D = buildMatrix(nodes, depot);
+  const depotKm = nodes.map((n) => haversine(depot, n));
 
-  let k = 0;
-  let covered = 0;
-  while (k < fleet.length && covered < totalDemand) {
-    covered += fleet[k].capacity;
-    k += 1;
-  }
-  k = Math.max(1, Math.min(k, fleet.length, nodes.length));
+  const zoneGroups = new Map();
+  nodes.forEach((n, i) => {
+    const z = zones[i];
+    if (!zoneGroups.has(z)) zoneGroups.set(z, { zone: z, idx: [], demand: 0, far: 0 });
+    const g = zoneGroups.get(z);
+    g.idx.push(i);
+    g.demand += demands[i];
+    g.far = Math.max(g.far, depotKm[i]);
+  });
 
-  const used = fleet.slice(0, Math.min(fleet.length, nodes.length)).sort((a, b) => a.capacity - b.capacity);
-  const softTarget = Math.ceil(totalDemand / k);
+  const zoneDepotKm = {};
+  zoneGroups.forEach((g, z) => {
+    zoneDepotKm[z] = g.idx.reduce((s, i) => s + depotKm[i], 0) / g.idx.length;
+  });
+  const penalty = makePenalty(zones, zoneDepotKm);
 
-  const order = sweepOrder(nodes, depot);
-  const suffix = new Array(order.length + 1).fill(0);
-  for (let i = order.length - 1; i >= 0; i--) suffix[i] = suffix[i + 1] + demands[order[i]];
+  const clusters = fleet
+    .slice(0, Math.min(fleet.length, nodes.length))
+    .map((v) => ({ vehicle: v, seq: [], load: 0, cost: 0 }));
 
-  const clusters = used.map((v) => ({ vehicle: v, seq: [], load: 0, cost: 0 }));
+  const groups = [...zoneGroups.values()].sort((a, b) => b.far - a.far);
   const leftover = [];
-  let ci = 0;
 
-  order.forEach((node, idx) => {
-    while (ci < clusters.length) {
-      const c = clusters[ci];
-      const capLeft = c.vehicle.capacity - c.load;
-      if (demands[node] > capLeft) {
-        ci += 1;
-        continue;
+  groups.forEach((g) => {
+    const members = g.idx.slice().sort((a, b) => depotKm[b] - depotKm[a]);
+    let pending = members;
+
+    while (pending.length) {
+      const pendingDemand = pending.reduce((s, i) => s + demands[i], 0);
+
+      let target = null;
+      let targetSeq = null;
+      let bestDelta = Infinity;
+
+      clusters.forEach((c) => {
+        if (c.load + pendingDemand > c.vehicle.capacity) return;
+        const trial = insertMany(c.seq, pending, D);
+        const delta = (trial.cost + penalty(trial.seq)) - (c.cost + penalty(c.seq));
+        if (delta < bestDelta - EPS) {
+          bestDelta = delta;
+          target = c;
+          targetSeq = trial.seq;
+        }
+      });
+
+      if (target) {
+        target.seq = targetSeq;
+        target.load += pendingDemand;
+        target.cost = seqCost(targetSeq, D);
+        break;
       }
-      const restCapacity = clusters.slice(ci + 1).reduce((s, r) => s + r.vehicle.capacity, 0);
-      const mustFill = suffix[idx + 1] > restCapacity;
-      if (c.load + demands[node] <= softTarget || mustFill || !c.seq.length) {
-        c.seq.push(node);
-        c.load += demands[node];
-        return;
+
+      let host = null;
+      let hostFree = -1;
+      let hostScore = Infinity;
+      clusters.forEach((c) => {
+        const free = c.vehicle.capacity - c.load;
+        if (free <= 0) return;
+        const nearest = pending.reduce(
+          (best, i) => Math.min(best, c.seq.length ? Math.min(...c.seq.map((j) => D[i + 1][j + 1])) : depotKm[i]),
+          Infinity
+        );
+        const s2 = nearest - free * 0.05;
+        if (s2 < hostScore - EPS) {
+          hostScore = s2;
+          hostFree = free;
+          host = c;
+        }
+      });
+
+      if (!host || hostFree <= 0) {
+        leftover.push(...pending);
+        break;
       }
-      ci += 1;
+
+      const take = [];
+      const rest = [];
+      let used = host.load;
+      pending.forEach((i) => {
+        if (used + demands[i] <= host.vehicle.capacity) {
+          take.push(i);
+          used += demands[i];
+        } else {
+          rest.push(i);
+        }
+      });
+
+      if (!take.length) {
+        leftover.push(...rest);
+        break;
+      }
+
+      const placed = insertMany(host.seq, take, D);
+      host.seq = placed.seq;
+      host.load = used;
+      host.cost = placed.cost;
+
+      pending = rest;
     }
-    leftover.push(node);
   });
 
   const stillLeft = [];
@@ -250,12 +363,11 @@ export const planRoutes = ({ orders, depot, vehicles, defaultCapacity = 0 }) => 
       let bestDelta = Infinity;
       clusters.forEach((c) => {
         if (c.load + demands[node] > c.vehicle.capacity) return;
-        const base = seqCost(c.seq, D);
+        const base = seqCost(c.seq, D) + penalty(c.seq);
         const ins = bestInsertion(c.seq, node, D);
-        const delta = ins.cost - base;
-        const emptyBonus = c.seq.length ? 0 : -EPS;
-        if (delta + emptyBonus < bestDelta) {
-          bestDelta = delta + emptyBonus;
+        const delta = seqCost(ins.seq, D) + penalty(ins.seq) - base;
+        if (delta < bestDelta) {
+          bestDelta = delta;
           target = c;
           targetSeq = ins.seq;
         }
@@ -273,7 +385,9 @@ export const planRoutes = ({ orders, depot, vehicles, defaultCapacity = 0 }) => 
     c.cost = seqCost(c.seq, D);
   });
 
-  interRouteImprove(clusters, D, demands);
+  interRouteImprove(clusters, D, demands, penalty);
+  mergeRoutes(clusters, D);
+  interRouteImprove(clusters, D, demands, penalty, 4);
 
   const assignments = clusters
     .filter((c) => c.seq.length)

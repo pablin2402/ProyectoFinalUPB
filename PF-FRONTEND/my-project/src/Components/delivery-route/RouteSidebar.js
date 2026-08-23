@@ -9,7 +9,7 @@ import { MIN_ORDERS_TO_OPTIMIZE } from "../../utils/RouteOptimizer";
 import TextInputFilter from "../../Components/LittleComponents/TextInputFilter";
 import { TABS } from "../../constants/routeConfigs";
 
-const PAGE_SIZES = [10, 20, 50];
+const PAGE_SIZES = [50];
 
 const capacityColor = (pct, over) => {
   if (over) return { bar: "#DC2626", text: "text-red-600", chip: "bg-red-50 text-red-700" };

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useJsApiLoader } from "@react-google-maps/api";
 import { GOOGLE_API_KEY } from "../config";
-
+import { getMunicipioForPoint } from "../utils/CochabambaMunicipios";
 import { useDeliveryRoute } from "../hooks/useDeliveryRoute";
 import { useRoutePlanDirections } from "../utils/useRoutePlanDirections";
 import { planRoutes, baselineManual, getLoad } from "../utils/cvrpPlanner";
@@ -71,18 +71,18 @@ export default function DeliveryRouteView() {
     () =>
       (rt.filteredMarkers || []).map((p) => {
         const cl = p.id_client?.client_location || p.client_location || {};
+        const muni = getMunicipioForPoint(cl.latitud, cl.longitud);
         return {
           _id: p._id,
           lat: Number(cl.latitud),
           lng: Number(cl.longitud),
           boxes: getLoad(p).boxes,
-          zone: p.region,
+          zone: muni?.id || "sin-zona",
           raw: p,
         };
       }).filter((o) => Number.isFinite(o.lat) && Number.isFinite(o.lng)),
     [rt.filteredMarkers]
   );
-
   const baselineKm = useMemo(
     () => (plan ? baselineManual({ orders: planningOrders, depot: DEPOT }).distance : 0),
     [plan, planningOrders]

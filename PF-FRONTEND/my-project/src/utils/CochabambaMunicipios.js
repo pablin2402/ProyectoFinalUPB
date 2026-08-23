@@ -1,56 +1,43 @@
 import { CERCADO_OSM, VINTO, SACABA, QUILLACOLLO, TIQUIPAYA, COLCAPIRHUA } from "./CitiesCoordinates";
 
 const MUNI_COLOR = "#475569";
-const MUNI_COLOR_LIGHT = "#64748B";
 function buildPolygon(data) {
+    try {
+        const relation = data?.elements?.find(e => e.type === "relation");
+        if (!relation) return [];
 
-    const relation = data.elements.find(e => e.type === "relation");
+        let ways = relation.members
+            .filter(m => m.role === "outer" && m.geometry)
+            .map(w => [...w.geometry]);
 
-    let ways = relation.members
-        .filter(m => m.role === "outer" && m.geometry)
-        .map(w => [...w.geometry]);
+        if (!ways.length) return [];
 
-    let polygon = [...ways.shift()];
+        let polygon = [...ways.shift()];
 
-    while (ways.length) {
-
-        const last = polygon[polygon.length - 1];
-
-        const idx = ways.findIndex(w => {
-
-            const start = w[0];
-            const end = w[w.length - 1];
-
-            return (
-                (Math.abs(start.lat - last.lat) < 1e-6 &&
-                 Math.abs(start.lon - last.lon) < 1e-6)
-                ||
-                (Math.abs(end.lat - last.lat) < 1e-6 &&
-                 Math.abs(end.lon - last.lon) < 1e-6)
-            );
-        });
-
-        if (idx === -1) break;
-
-        let next = ways.splice(idx, 1)[0];
-
-        const start = next[0];
-        const end = next[next.length - 1];
-
-        if (
-            Math.abs(end.lat - last.lat) < 1e-6 &&
-            Math.abs(end.lon - last.lon) < 1e-6
-        ) {
-            next.reverse();
+        while (ways.length) {
+            const last = polygon[polygon.length - 1];
+            const idx = ways.findIndex(w => {
+                const start = w[0];
+                const end = w[w.length - 1];
+                return (
+                    (Math.abs(start.lat - last.lat) < 1e-6 && Math.abs(start.lon - last.lon) < 1e-6) ||
+                    (Math.abs(end.lat - last.lat) < 1e-6 && Math.abs(end.lon - last.lon) < 1e-6)
+                );
+            });
+            if (idx === -1) break;
+            let next = ways.splice(idx, 1)[0];
+            const end = next[next.length - 1];
+            if (Math.abs(end.lat - last.lat) < 1e-6 && Math.abs(end.lon - last.lon) < 1e-6) next.reverse();
+            polygon.push(...next.slice(1));
         }
 
-        polygon.push(...next.slice(1));
+        return polygon
+            .map(p => ({ lat: Number(p.lat), lng: Number(p.lon) }))
+            .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+    } catch (e) {
+        console.warn("buildPolygon falló", e);
+        return [];
     }
-
-    return polygon.map(p => ({
-        lat: p.lat,
-        lng: p.lon
-    }));
 }
 export const isPointInMunicipio = (lat, lng, municipio) => {
     if (!municipio || !municipio.bounds) return false;
