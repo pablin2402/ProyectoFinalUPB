@@ -294,7 +294,7 @@ const ClientPaymentDialog = ({ onClose, onSave, orderId, totalPaid, idClient, sa
           await axios.post(API_URL + "/whatsapp/order/track", {
             orderId, eventType: "Pago Ingresado", triggeredBySalesman: id_user,
             triggeredByDelivery: "", triggeredByUser: "", location: { lat: pos.coords.latitude, lng: pos.coords.longitude },
-          }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+          }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => { });
         });
         setSaveSuccess(true);
         setTimeout(() => { setIsSaving(false); setSaveSuccess(false); setIsBlockchainProcessing(false); setBlockchainSuccess(false); setStatus(""); onClose(); }, 2000);
@@ -341,7 +341,7 @@ const ClientPaymentDialog = ({ onClose, onSave, orderId, totalPaid, idClient, sa
             else setTxStatus('detected');
           } else { setTxStatus('confirmed'); setPaid(true); clearInterval(pollingRef.current); clearInterval(elapsedRef.current); }
         }
-      } catch (e) {}
+      } catch (e) { }
     };
     check(); pollingRef.current = setInterval(check, 8000);
     return () => { clearInterval(pollingRef.current); clearInterval(elapsedRef.current); };
@@ -444,21 +444,15 @@ const ClientPaymentDialog = ({ onClose, onSave, orderId, totalPaid, idClient, sa
                 <div>
                   <p className="text-[10px] font-black text-gray-500 uppercase tracking-wider mb-2">Red de pago</p>
                   <div className="grid grid-cols-3 gap-2">
-                    {Object.entries(NETWORKS).map(([k, n]) => {
-                      const fee = rateData?.fees?.[k];
-                      return (
-                        <button key={k} onClick={() => setSelectedNetwork(k)}
-                          className={`p-3 rounded-xl border-2 transition-all text-left ${selectedNetwork === k ? 'border-[#D3423E] bg-red-50/50 shadow-sm' : 'border-gray-200 hover:border-gray-300'}`}>
-                          <p className="font-black text-sm" style={{ color: n.color }}>{n.name}</p>
-                                                   <p className="text-[10px] text-gray-500 mt-0.5">
-                            {Number.isFinite(fee) && fee >= 0.0001 ? `$${fee.toFixed(4)} USD` : n.estimatedFee}
-                          </p>
-                          {fee !== null && fee !== undefined && fee < 0.05 && <span className="text-[9px] text-green-600 font-bold">✓ Muy bajo</span>}
-                          {fee !== null && fee !== undefined && fee >= 5 && <span className="text-[9px] text-amber-600 font-bold">⚠ Alto</span>}
-                          {selectedNetwork === k && <p className="text-[10px] text-[#D3423E] font-bold mt-1">✓ Seleccionada</p>}
-                        </button>
-                      );
-                    })}
+                    {Object.entries(NETWORKS).map(([k, n]) => (
+                      <button key={k} onClick={() => setSelectedNetwork(k)}
+                        className={`p-3 rounded-xl border-2 transition-all text-left ${selectedNetwork === k ? 'border-[#D3423E] bg-red-50/50 shadow-sm' : 'border-gray-200 hover:border-gray-300'}`}>
+                        <p className="font-black text-sm" style={{ color: n.color }}>{n.name}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">{n.estimatedFee} USD</p>
+                        <p className="text-[9px] text-gray-400">{n.description}</p>
+                        {selectedNetwork === k && <p className="text-[10px] text-[#D3423E] font-bold mt-1">✓ Seleccionada</p>}
+                      </button>
+                    ))}
                   </div>
                   {rateData?.fees && (
                     <p className="text-[9px] text-gray-400 mt-1.5 flex items-center gap-1">
@@ -578,8 +572,8 @@ const ClientPaymentDialog = ({ onClose, onSave, orderId, totalPaid, idClient, sa
                   className={`flex-1 py-3 rounded-xl font-black text-sm text-white flex items-center justify-center gap-2 transition-all ${canSave ? 'bg-gradient-to-r from-[#D3423E] to-red-600 hover:shadow-lg' : 'bg-gray-300 cursor-not-allowed'}`}>
                   {isSaving ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Guardando...</>
                     : saveSuccess ? <><FaCheckCircle /> Guardado</>
-                    : paymentMethod === 'crypto' && txStatus !== 'confirmed' ? 'Esperando confirmación...'
-                    : 'Confirmar Pago'}
+                      : paymentMethod === 'crypto' && txStatus !== 'confirmed' ? 'Esperando confirmación...'
+                        : 'Confirmar Pago'}
                 </button>
               </>
             )}
