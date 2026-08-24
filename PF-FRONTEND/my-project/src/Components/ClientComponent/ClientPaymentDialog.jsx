@@ -7,9 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes, FaWallet, FaMoneyBillWave, FaCopy, FaCheckCircle, FaExclamationTriangle, FaSync, FaEdit, FaExternalLinkAlt, FaCamera, FaTrash } from "react-icons/fa";
 
 const NETWORKS = {
-  polygon: { name: 'Polygon', symbol: 'POL', color: '#8247E5', estimatedFee: '~$0.01', description: 'Recomendado', explorerUrl: 'https://polygonscan.com/tx/', chainId: 137, chainIdHex: '0x89' },
-  ethereum: { name: 'Ethereum', symbol: 'ETH', color: '#627EEA', estimatedFee: '~$5-30', description: 'Red principal', explorerUrl: 'https://etherscan.io/tx/', chainId: 1, chainIdHex: '0x1' },
-  bsc: { name: 'BNB Chain', symbol: 'BNB', color: '#F0B90B', estimatedFee: '~$0.30', description: 'Alta liquidez', explorerUrl: 'https://bscscan.com/tx/', chainId: 56, chainIdHex: '0x38' },
+  polygon: { name: 'Polygon', symbol: 'POL', color: '#8247E5', estimatedFee: '~$0.07', description: 'Recomendado', explorerUrl: 'https://polygonscan.com/tx/', chainId: 137, chainIdHex: '0x89' },
+  ethereum: { name: 'Ethereum', symbol: 'ETH', color: '#627EEA', estimatedFee: '~0.3', description: 'Red principal', explorerUrl: 'https://etherscan.io/tx/', chainId: 1, chainIdHex: '0x1' },
+  bsc: { name: 'BNB Chain', symbol: 'BNB', color: '#F0B90B', estimatedFee: '~$0.01', description: 'Alta liquidez', explorerUrl: 'https://bscscan.com/tx/', chainId: 56, chainIdHex: '0x38' },
 };
 
 const PAY_TYPES = [
