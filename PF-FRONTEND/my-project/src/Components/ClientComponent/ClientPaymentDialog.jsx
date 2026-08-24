@@ -8,7 +8,7 @@ import { FaTimes, FaWallet, FaMoneyBillWave, FaCopy, FaCheckCircle, FaExclamatio
 
 const NETWORKS = {
   polygon: { name: 'Polygon', symbol: 'POL', color: '#8247E5', estimatedFee: '~$0.07', description: 'Recomendado', explorerUrl: 'https://polygonscan.com/tx/', chainId: 137, chainIdHex: '0x89' },
-  ethereum: { name: 'Ethereum', symbol: 'ETH', color: '#627EEA', estimatedFee: '~0.3', description: 'Red principal', explorerUrl: 'https://etherscan.io/tx/', chainId: 1, chainIdHex: '0x1' },
+  ethereum: { name: 'Ethereum', symbol: 'ETH', color: '#627EEA', estimatedFee: '~$0.3', description: 'Red principal', explorerUrl: 'https://etherscan.io/tx/', chainId: 1, chainIdHex: '0x1' },
   bsc: { name: 'BNB Chain', symbol: 'BNB', color: '#F0B90B', estimatedFee: '~$0.01', description: 'Alta liquidez', explorerUrl: 'https://bscscan.com/tx/', chainId: 56, chainIdHex: '0x38' },
 };
 
@@ -450,8 +450,8 @@ const ClientPaymentDialog = ({ onClose, onSave, orderId, totalPaid, idClient, sa
                         <button key={k} onClick={() => setSelectedNetwork(k)}
                           className={`p-3 rounded-xl border-2 transition-all text-left ${selectedNetwork === k ? 'border-[#D3423E] bg-red-50/50 shadow-sm' : 'border-gray-200 hover:border-gray-300'}`}>
                           <p className="font-black text-sm" style={{ color: n.color }}>{n.name}</p>
-                          <p className="text-[10px] text-gray-500 mt-0.5">
-                            {fee !== null && fee !== undefined ? `$${fee < 0.01 ? '<0.01' : fee.toFixed(4)} USD` : n.estimatedFee}
+                                                   <p className="text-[10px] text-gray-500 mt-0.5">
+                            {Number.isFinite(fee) && fee >= 0.0001 ? `$${fee.toFixed(4)} USD` : n.estimatedFee}
                           </p>
                           {fee !== null && fee !== undefined && fee < 0.05 && <span className="text-[9px] text-green-600 font-bold">✓ Muy bajo</span>}
                           {fee !== null && fee !== undefined && fee >= 5 && <span className="text-[9px] text-amber-600 font-bold">⚠ Alto</span>}
