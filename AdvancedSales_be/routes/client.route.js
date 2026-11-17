@@ -10,6 +10,7 @@ const salesManActivityController = require("../controllers/SalesManActivityContr
 const deliveryRouteController = require("../controllers/DeliveryRouteController.js");
 const upload1 = require("../services/uploadToS3.js");
 const salesPrediction = require("../controllers/SalesPredictionController.js");
+const requireAdmin = require("../middlewares/requireAdmin.js");
 
 router
 .post("/upload/image", upload1.single('image'), (req, res) => {
@@ -28,7 +29,7 @@ router
 .post("/client/sales",authenticateToken, clientController.getClientInfoByIdAndSales)
 .put("/client/user/id",clientController.updateClient)
 
-.post("/delivery",authenticateToken, deliveryController.postNewDelivery)
+.post("/delivery",authenticateToken,requireAdmin,deliveryController.postNewDelivery)
 .post("/delivery/id",authenticateToken, deliveryController.getDeliveryById)
 .put("/delivery/status",authenticateToken, deliveryController.uploadDeliveryStatus)
 .post("/delivery/list",authenticateToken, deliveryController.getDelivery)
@@ -40,7 +41,7 @@ router
 .put("/client/archived",authenticateToken, clientController.updateUserStatus)
 .post("/sales/list/id", authenticateToken,salesManController.getSalesMan)
 .post("/sales/id", authenticateToken,salesManController.getSalesManById)
-.post("/sales/salesman", authenticateToken,salesManController.postNewAccount)
+.post("/sales/salesman",authenticateToken,requireAdmin,salesManController.postNewAccount)
 .post("/sales/location", authenticateToken,salesManController.getClientLocationById)
 .post("/salesman/multiple",authenticateToken,salesManController.getSalesManList1)
 .put("/salesman/status",authenticateToken,salesManController.uploadSalesmanStatus)

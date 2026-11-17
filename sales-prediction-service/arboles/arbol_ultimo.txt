@@ -1,0 +1,61 @@
+ÁRBOL 0 DEL MODELO XGBOOST
+Fecha: 2026-10-30_14-15-47
+Total de árboles: 80
+Base score: 460.52942
+Predicción mes +1: 224.79
+Verificación del recorrido (path_ok): True
+
+RECORRIDO DEL MES +1
+------------------------------------------------------------
+1. nodo 0: ¿trend < 33.0? valor = 46.0 -> NO -> nodo 2
+2. nodo 2: ¿lag_5 < 480.0? valor = 480.0 -> NO -> nodo 6
+3. nodo 6: ¿lag_4 < 480.0? valor = 468.0 -> SI -> nodo 13
+Hoja final: nodo 13 = -10.0844612
+
+FEATURES DEL MES +1
+------------------------------------------------------------
+lag_1        = 184.5000
+lag_2        = 184.5000
+lag_3        = 277.0000
+lag_4        = 468.0000
+lag_5        = 480.0000
+lag_6        = 336.0000
+lag_7        = 396.0000
+lag_8        = 504.0000
+lag_9        = 300.0000
+lag_10       = 384.0000
+lag_11       = 480.0000
+lag_12       = 552.0000
+mean_3       = 215.3333
+mean_6       = 321.6667
+mean_12      = 378.8333
+std_6        = 119.9395
+trend        = 46.0000
+month_idx    = 10.0000
+yoy_ratio    = 0.5694
+
+ÁRBOL COMPLETO (formato XGBoost)
+------------------------------------------------------------
+0:[trend<33] yes=1,no=2,missing=2,gain=83638.3047,cover=30
+	1:[lag_5<384] yes=3,no=4,missing=4,gain=28175.2422,cover=19
+		3:[lag_2<384] yes=7,no=8,missing=8,gain=8348.08398,cover=6
+			7:[lag_1<277] yes=15,no=16,missing=16,gain=16988.9805,cover=3
+				15:leaf=-3.93241835,cover=1
+				16:leaf=6.25403309,cover=2
+			8:[lag_1<396] yes=17,no=18,missing=18,gain=201.786621,cover=3
+				17:leaf=-0.732418597,cover=1
+				18:leaf=-3.00025225,cover=2
+		4:[lag_10<552] yes=9,no=10,missing=10,gain=20679.0938,cover=13
+			9:leaf=8.67906284,cover=9
+			10:[lag_1<564] yes=19,no=20,missing=20,gain=401.079346,cover=4
+				19:leaf=0.425461769,cover=2
+				20:leaf=2.13974738,cover=2
+	2:[lag_5<480] yes=5,no=6,missing=6,gain=60504.4219,cover=11
+		5:[lag_1<336] yes=11,no=12,missing=12,gain=1396.70312,cover=5
+			11:leaf=3.85403323,cover=2
+			12:[lag_3<408] yes=21,no=22,missing=22,gain=5.14373779,cover=3
+				21:leaf=0.329803586,cover=1
+				22:leaf=1.11117601,cover=2
+		6:[lag_4<480] yes=13,no=14,missing=14,gain=1505.17188,cover=6
+			13:leaf=-10.0844612,cover=4
+			14:leaf=-4.02882385,cover=2

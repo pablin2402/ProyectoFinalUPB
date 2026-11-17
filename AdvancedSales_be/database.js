@@ -1,23 +1,17 @@
 const mongoose = require("mongoose");
-const { MongoStore } = require('wwebjs-mongo');
+const { MongoStore } = require("wwebjs-mongo");
 
-const URI ="mongodb+srv://pablo:PpR2402174064@cluster0.q40rfxx.mongodb.net/API?retryWrites=true&w=majority";
+const URI = process.env.MONGO_URI;
 mongoose.set("strictQuery", false);
 
-let store; 
+let store;
 
 mongoose
-  .connect(URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+  .connect(URI)
+  .then(() => {
+    console.log("Base de datos conectada");
+    store = new MongoStore({ mongoose });
   })
-  .then(() => 
-    console.log("Base de datos conectada"),
-    store = new MongoStore({mongoose: mongoose})
-  )
   .catch((err) => console.log(err));
 
-  module.exports = {
-    mongoose,
-    store,
-  };
+module.exports = { mongoose, store };

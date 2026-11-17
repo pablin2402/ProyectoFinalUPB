@@ -40,7 +40,7 @@ const getProductMonthlyPrediction = async (req, res) => {
             }
 
             try {
-                const { data } = await axios.post("http://localhost:8000/predict", {
+                const { data } = await axios.post(`${process.env.ML_SERVICE_URL || "http://localhost:5007"}/predict`, {
                     ventas: productos[producto]
                 });
                 resultados[producto] = data.predicciones;

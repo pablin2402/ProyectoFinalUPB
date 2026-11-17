@@ -91,10 +91,7 @@ const AutomatizationList = require("../models/AutomatizationList");
     const { to, subject, html } = req.body;
     const transporter = nodemailer.createTransport({
       service: 'gmail',
-      auth: {
-        user: 'pabloperedo04@gmail.com',
-        pass: 'yxqf qcgu yaxl odvr'
-      }
+           auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD }
     });
   
     const mailOptions = {

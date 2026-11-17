@@ -31,7 +31,9 @@ app.use((req, res, next) => {
 
   next();
 });
-
+const authenticateToken = require("./middlewares/authentication");
+const PUBLIC_PATHS = new Set(["/login", "/upload/image"]);
+app.use("/whatsapp", (req, res, next) => (PUBLIC_PATHS.has(req.path) ? next() : authenticateToken(req, res, next)));
 app.use("/whatsapp", triggerController);
 app.use("/whatsapp", pdfController);
 app.use("/whatsapp", apiRoute);
@@ -39,7 +41,7 @@ app.use("/whatsapp", inventaryRoute);
 app.use("/whatsapp", userRoute);
 
 
-const port = process.env.PORT || 3057;
+const port = 3089;
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server running on port ${port}`);
 });

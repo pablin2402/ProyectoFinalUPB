@@ -1,5 +1,6 @@
 const expres = require("express");
 const router = expres.Router();
+
 const productController = require("../controllers/ProductController");
 const categoryController = require("../controllers/CategoryController");
 const carrouselController = require("../controllers/CarrouselController");
@@ -18,10 +19,11 @@ const salesObjectiveRegionController = require("../controllers/SalesObjectiveReg
 const administratorController = require("../controllers/AdministratorsController.js");
 const currentLocationController = require("../controllers/CurrentLocationController.js");
 const paymentController = require("../controllers/PaymentController.js");
-const axios = require("axios")
+const requireAdmin = require("../middlewares/requireAdmin.js");
+
 router
 .post("/login", userController.getUser)
-.post("/administrator",authenticateToken,administratorController.postNewAccount)
+.post("/administrator",authenticateToken,requireAdmin,administratorController.postNewAccount)
 .post("/administrator/list",administratorController.getClientsList)
 .get("/check-payment/:orderId", authenticateToken, async (req, res) => {
   try {
@@ -161,7 +163,7 @@ router
 .put("/automatization/list/id", authenticateToken,automatizationController.uploadAutomatizationStatus)
 
 
-.post("/product/id",authenticateToken,productController.getProductsById)
+.post("/product/id",productController.getProductsById)
 .post("/product", authenticateToken,productController.postProduct)
 .post("/product/import",authenticateToken, productController.postProductsMany)
 .put("/product/id",authenticateToken, productController.uploadProductStatus)
@@ -169,7 +171,7 @@ router
 .put("/product/price/id",authenticateToken, productController.updateProductAndPrice)
 
 
-.post("/category/id",authenticateToken, categoryController.getCategory)
+.post("/category/id", categoryController.getCategory)
 .post("/category",authenticateToken, categoryController.postCategory)
 .post("/category/import",authenticateToken,  categoryController.postCategoryMany)
 .get("/carrousel",authenticateToken, carrouselController.getCarrousel)
@@ -180,14 +182,14 @@ router
 .post("/price",authenticateToken, priceController.postPrice)
 .put("/price",authenticateToken, priceController.uploadPriceProduct)
 
-.post("/user", userController.postNewAccountUser)
+.post("/user", authenticateToken,requireAdmin,userController.postNewAccountUser)
 .put("/password",authenticateToken,  userController.resetPassword)
 .put("/user/id",authenticateToken, userController.updateUserFile)
 .delete("/user/id",authenticateToken, userController.deleteClient)
 
-.post("/order", authenticateToken,orderController.postOrder)
+.post("/order",orderController.postOrder)
 .post("/order/products/stadistics",authenticateToken, orderController.getMostSoldProducts)
-.post("/order/products/analysis",authenticateToken, orderController.predictSalesForTopProducts)
+.post("/order/products/analysis", orderController.predictSalesForTopProducts)
 .post("/order/id", authenticateToken,orderController.getOrderById)
 .post("/order/deliver/id",authenticateToken, orderController.getOrderByIdAndDelivery)
 .post("/order/filter/id", authenticateToken,orderController.getOrderStatusCounts)

@@ -2,9 +2,9 @@ const Order = require("../models/Order");
 const mongoose = require("mongoose");
 const axios = require("axios");
 
-const ML_SERVICE_URL = process.env.ML_SERVICE_URL || "http://localhost:5007";
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL || "http://localhost:5059";
 const ML_TIMEOUT_MS = 30000;
-const HISTORY_YEARS = 5;
+const HISTORY_YEARS = 3;
 const TOP_PRODUCTS_LIMIT = 10;
 const FORECAST_HORIZON = 3;
 const GROWTH_YOY = 0.10;
@@ -264,6 +264,7 @@ const predictSalesForTopProducts = async (req, res) => {
             series,
             horizon: FORECAST_HORIZON,
             growth_yoy: GROWTH_YOY,
+            "dump_tree": true
           },
           { timeout: ML_TIMEOUT_MS }
         );
@@ -868,12 +869,10 @@ const getOrderByIdAndOrderStatus = async (req, res) => {
 
     const pipeline = [];
 
-    // 1. PRIMER FILTRO
     pipeline.push({
       $match: matchStage
     });
 
-    // 2. CLIENTE
     pipeline.push({
       $lookup: {
         from: "clients",
@@ -890,7 +889,6 @@ const getOrderByIdAndOrderStatus = async (req, res) => {
       }
     });
 
-    // 3. FILTRO POR NOMBRE
     if (fullName) {
       const escapedName = fullName
         .normalize("NFD")
@@ -917,14 +915,12 @@ const getOrderByIdAndOrderStatus = async (req, res) => {
       });
     }
 
-    // 4. ORDENAR ANTES DE PAGINAR
     pipeline.push({
       $sort: {
         creationDate: -1
       }
     });
 
-    // 5. PAGINACIÓN EN MONGODB
     pipeline.push({
       $facet: {
         metadata: [
@@ -1082,10 +1078,6 @@ const getOrderByIdAndOrderStatus = async (req, res) => {
             }
           },
 
-          // ==========================
-          // ELIMINAR CAMPOS TEMPORALES
-          // ==========================
-
           {
             $unset: [
               "pagos",
@@ -1104,7 +1096,6 @@ const getOrderByIdAndOrderStatus = async (req, res) => {
     const totalRecords =
       result[0]?.metadata?.[0]?.total || 0;
 
-    // Populate SOLO las órdenes de esta página
     await Order.populate(orders, [
       {
         path: "salesId"

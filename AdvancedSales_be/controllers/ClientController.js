@@ -132,6 +132,8 @@ const resetPassword = async (req, res) => {
     if (oldPassword) {
       const match = await bcrypt.compare(oldPassword, user.password);
       if (!match) return res.status(401).json({ message: "Contraseña actual incorrecta" });
+    } else if (req.user?.role !== "ADMIN") {
+      return res.status(403).json({ message: "No autorizado" });
     }
 
     user.password = await bcrypt.hash(newPassword, SALT_ROUNDS);
