@@ -12,7 +12,7 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
-const TOKEN_EXPIRY = "24h";
+const TOKEN_EXPIRY = "8h";
 
 const normalizeEmail = (email) => (email || "").trim().toLowerCase();
 
