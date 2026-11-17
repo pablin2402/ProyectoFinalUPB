@@ -86,7 +86,7 @@ const SalesManCreationComponent = () => {
     const fd = new FormData();
     fd.append("image", imageFile);
     const res = await axios.post(API_URL + "/whatsapp/upload/image", fd, {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` },
     });
     return res.data.imageUrl;
   };

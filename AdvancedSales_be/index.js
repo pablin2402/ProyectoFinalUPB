@@ -13,6 +13,7 @@ const inventaryRoute = require("./routes/inventary.route");
 const userRoute = require("./routes/client.route");
 const pdfController = require("./controllers/pdfController");
 const triggerController = require("./controllers/TriggerController");
+const authenticateToken = require("./middlewares/authentication");
 
 const app = express();
 
@@ -24,24 +25,30 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "*");
   res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
-
   next();
 });
-const authenticateToken = require("./middlewares/authentication");
-const PUBLIC_PATHS = new Set(["/login", "/upload/image"]);
-app.use("/whatsapp", (req, res, next) => (PUBLIC_PATHS.has(req.path) ? next() : authenticateToken(req, res, next)));
+
+const PUBLIC_PATHS = new Set(["/login"]);
+app.use("/whatsapp", (req, res, next) => {
+  if (PUBLIC_PATHS.has(req.path)) return next();
+  authenticateToken(req, res, () => {
+    if (req.user?.id_owner && req.body && typeof req.body === "object" && "id_owner" in req.body) {
+      req.body.id_owner = req.user.id_owner;
+    }
+    next();
+  });
+});
+
 app.use("/whatsapp", triggerController);
 app.use("/whatsapp", pdfController);
 app.use("/whatsapp", apiRoute);
 app.use("/whatsapp", inventaryRoute);
 app.use("/whatsapp", userRoute);
 
-
-const port = 3089;
+const port = process.env.PORT || 3089;
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server running on port ${port}`);
 });

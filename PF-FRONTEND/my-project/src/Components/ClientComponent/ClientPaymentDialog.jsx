@@ -270,7 +270,7 @@ const ClientPaymentDialog = ({ onClose, onSave, orderId, totalPaid, idClient, sa
       let imageUrl = "";
       if (imageFile) {
         const fd = new FormData(); fd.append("image", imageFile);
-        const r = await axios.post(API_URL + "/whatsapp/upload/image", fd, { headers: { "Content-Type": "multipart/form-data" } });
+        const r = await axios.post(API_URL + "/whatsapp/upload/image", fd, { headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` } });
         imageUrl = r.data.imageUrl;
       }
       let bcHash = null, bcBlock = null;
