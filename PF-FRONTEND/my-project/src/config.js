@@ -1,4 +1,5 @@
-export const API_URL = "http://localhost:3058";
+//export const API_URL = "http://localhost:3069";
+export const API_URL = process.env.REACT_APP_API_URL || "/api";
 export const GOOGLE_API_KEY =process.env.REACT_APP_GOOGLE_API_KEY;
 export const UPLOAD_TIME=50000;
 export const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS; //18/15/26
