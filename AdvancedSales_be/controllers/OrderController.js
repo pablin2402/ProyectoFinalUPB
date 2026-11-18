@@ -8,7 +8,7 @@ const HISTORY_YEARS = 3;
 const TOP_PRODUCTS_LIMIT = 10;
 const FORECAST_HORIZON = 3;
 const GROWTH_YOY = 0.10;
-const MIN_MONTHS_REQUIRED = 6;
+const MIN_MONTHS_REQUIRED = 12;
 const MIN_NON_ZERO_MONTHS = 4;
  
 const getCategorySummary = async (req, res) => {
